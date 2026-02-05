@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""
-Wrapper script that ensures docling is available before running conversion.
-This handles virtual environment setup automatically.
+"""Wrapper script that ensures docling is available before running conversion.
+
+This script prefers an isolated virtual environment (scripts/.venv) to avoid
+polluting the user's global Python environment and to keep dependencies stable.
 """
 import sys
 import subprocess
@@ -9,46 +10,54 @@ from pathlib import Path
 
 
 def ensure_docling():
-    """Check if docling is available, install if needed."""
-    try:
-        import docling
-        return True
-    except ImportError:
-        pass
-    
-    # Try to setup venv
+    """Ensure docling is installed in the local venv.
+
+    Returns:
+        Path to the venv python executable.
+    """
+
     script_dir = Path(__file__).parent
     setup_script = script_dir / "setup_venv.sh"
     venv_dir = script_dir / ".venv"
-    
-    if not venv_dir.exists():
+    venv_python = venv_dir / "bin" / "python"
+    venv_pip = venv_dir / "bin" / "pip"
+
+    def _create_venv_if_missing():
+        if venv_python.exists():
+            return
         print("Setting up virtual environment with docling...")
         if setup_script.exists():
             subprocess.run(["bash", str(setup_script)], check=True)
         else:
-            # Fallback: create venv and install directly
             subprocess.run([sys.executable, "-m", "venv", str(venv_dir)], check=True)
-            pip = venv_dir / "bin" / "pip"
-            subprocess.run([str(pip), "install", "docling"], check=True)
-    
-    # Try importing again
-    venv_python = venv_dir / "bin" / "python"
-    return venv_python if venv_python.exists() else None
+
+    def _ensure_docling_in_venv():
+        # Check import in the venv interpreter (not in the wrapper interpreter).
+        proc = subprocess.run([str(venv_python), "-c", "import docling"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if proc.returncode == 0:
+            return
+        print("Installing docling in virtual environment...")
+        if setup_script.exists():
+            subprocess.run(["bash", str(setup_script)], check=True)
+        else:
+            subprocess.run([str(venv_pip), "install", "docling"], check=True)
+            subprocess.run([str(venv_python), "-c", "import docling"], check=True)
+
+    _create_venv_if_missing()
+    if not venv_python.exists():
+        raise RuntimeError(f"Virtual environment python not found at: {venv_python}")
+
+    _ensure_docling_in_venv()
+    return venv_python
 
 
 def run_with_venv(script_name, args):
     """Run a conversion script, using venv if needed."""
     script_dir = Path(__file__).parent
-    venv_python = script_dir / ".venv" / "bin" / "python"
     script_path = script_dir / script_name
-    
-    if venv_python.exists():
-        # Use venv python
-        cmd = [str(venv_python), str(script_path)] + args
-    else:
-        # Use system python
-        cmd = [sys.executable, str(script_path)] + args
-    
+
+    venv_python = ensure_docling()
+    cmd = [str(venv_python), str(script_path)] + args
     return subprocess.run(cmd).returncode
 
 
@@ -69,7 +78,5 @@ if __name__ == "__main__":
         sys.exit(1)
     
     # Ensure docling is available
-    ensure_docling()
-    
     # Run conversion
     sys.exit(run_with_venv(script, args))

@@ -4,6 +4,7 @@ Convert PDF to a single markdown file using docling.
 """
 import sys
 import argparse
+import importlib
 from pathlib import Path
 
 
@@ -15,7 +16,8 @@ def main():
     args = parser.parse_args()
 
     try:
-        from docling.document_converter import DocumentConverter
+        docling_mod = importlib.import_module("docling.document_converter")
+        DocumentConverter = getattr(docling_mod, "DocumentConverter")
     except ImportError:
         print("ERROR: docling not installed. Install with: pip install docling", file=sys.stderr)
         sys.exit(1)
@@ -31,20 +33,28 @@ def main():
     else:
         output_path = pdf_path.with_suffix('.md')
 
+    if output_path.exists():
+        print(
+            f"ERROR: Output file already exists: {output_path}\n"
+            "Choose a different path with -o/--output or remove the existing file first.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
     print(f"Converting {pdf_path} to {output_path}...")
     if args.no_ocr:
         print("OCR disabled for faster processing")
 
     # Convert PDF to markdown
     try:
-        from docling.document_converter import ConversionOptions
+        ConversionOptions = getattr(docling_mod, "ConversionOptions")
         if args.no_ocr:
             options = ConversionOptions(ocr=False)
             converter = DocumentConverter(options=options)
         else:
             converter = DocumentConverter()
-    except ImportError:
-        # Fallback for older docling versions
+    except Exception:
+        # Fallback for older docling versions or API differences
         converter = DocumentConverter()
     
     result = converter.convert(str(pdf_path))
