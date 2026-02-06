@@ -80,11 +80,6 @@ sed -i.backup 's/pattern/replacement/' document.md
 python scripts/extract_samples.py document.md
 ```
 
-**⚠️ Phase 4 Mandatory Check**: After completing Phase 3, always run this detection:
-```bash
-grep "^## Table\|^## Figure\|^## [a-z])\|^## [A-Z][a-z]*[^:]\{0,20\}$" document.md
-```
-
 ## Performance Notes
 
 ⚠️ **Use `--no-ocr` flag** unless processing scanned documents:

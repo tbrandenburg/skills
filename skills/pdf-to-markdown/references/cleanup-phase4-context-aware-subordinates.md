@@ -72,15 +72,22 @@ Review of documentation...
 1. **Analyze**: Run `python scripts/extract_samples.py document.md`
    - Look for ## Table, ## Figure patterns that interrupt flow
    - Check for list items that became headings: ## Input, ## Output
-   - Use content-aware detection to find subordinate patterns
+   - **CRITICAL**: Use BROADER detection to catch ALL non-numbered headings:
+     ```bash
+     grep "^## [A-Za-z]" document.md | sort | uniq -c | sort -nr
+     ```
+   - Look for systematic patterns even if infrequent: ## PA X.X, ## Rating method RX
    - **IMPORTANT**: Note the actual patterns in YOUR document - don't assume standard formats!
 
-2. **Plan**: Find recurring non-numbered H2 headings (likely subordinates)
+2. **Plan**: Find ALL subordinate patterns (both frequent AND systematic)
    ```bash
-   # These are EXAMPLES - adapt based on step 1 analysis:
-   # Find H2 headings that appear 3+ times (excluding numbered sections)
-   SUBORDINATES=$(grep "^##\s\+[^0-9]" document.md | sort | uniq -c | awk '$1 >= 3 {print $2}' | cut -d' ' -f2- | paste -sd '|')
-   echo "Found recurring subordinates: $SUBORDINATES"
+   # BROADER approach - catch ALL letter-starting headings (including those with numbers):
+   # Frequent subordinates (3+ occurrences)
+   FREQUENT=$(grep "^## [A-Za-z]" document.md | sort | uniq -c | awk '$1 >= 3 {print $2}' | cut -d' ' -f3- | paste -sd '|')
+   
+   # Systematic subordinates (even if infrequent)
+   grep "^## \(Rating method\|PA [0-9]\|Process attribute\|Generic practice\)" document.md
+   echo "Found frequent: $FREQUENT"
    ```
 3. **Test**: Preview the subordinate conversion
    ```bash
@@ -103,11 +110,36 @@ Review of documentation...
 
 6. **Iterate**: Repeat steps 1-5 until no more wrong subordinates found
 
-## ⚠️ **CRITICAL Generic Principles**
-1. **Always analyze first** - never assume document structure
-2. **Use frequency analysis** - subordinates repeat across documents  
-3. **Preserve main structure** - protect numbered sections, annexes
-4. **Validate changes** - test patterns before applying
-5. **Context matters** - same heading might be main vs subordinate depending on position
+## Guidelines
 
-**Result**: The improved Phase 4 now automatically adapts to ANY document type by discovering its unique subordinate heading patterns, following AGENTS.md principles of being generic and content-aware rather than example-specific.
+### ⚠️ **CRITICAL Generic Principles**
+1. **Always analyze first** - never assume document structure
+2. **Use BROAD detection** - `^## [A-Za-z]` not `^## [^0-9]` (misses "PA 4.2"!)
+3. **Dual approach**: frequency analysis (3+) AND systematic patterns (1+)
+4. **Preserve main structure** - protect numbered sections, annexes
+5. **Validate changes** - test patterns before applying
+6. **Context matters** - same heading might be main vs subordinate depending on position
+
+### Common Systematic Subordinate Patterns
+
+Even if infrequent, these are usually subordinates and should be converted:
+
+```bash
+# Process/methodology documents
+'s/^## \(Process attribute name\)$/### \1/'
+'s/^## \(Rating method R[0-9]\)$/### \1/' 
+'s/^## \(PA [0-9]\+\.[0-9]\+\)$/### \1/'
+'s/^## \(Generic practice.*\)$/### \1/'
+
+# Technical documents  
+'s/^## \(Table [0-9]\+\)$/### \1/'
+'s/^## \(Figure [0-9]\+\)$/### \1/'
+'s/^## \(Appendix [A-Z]\)$/### \1/'
+
+# Academic/standards documents
+'s/^## \(Method\)$/### \1/'
+'s/^## \(Verification\)$/### \1/'
+'s/^## \(Requirements\)$/### \1/'
+```
+
+⚠️ **Key Lesson**: Don't rely only on frequency! Domain-specific subordinates may appear infrequently but still need conversion.
