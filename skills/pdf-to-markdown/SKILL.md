@@ -1,6 +1,6 @@
 ---
 name: pdf-to-markdown
-description: Convert PDF documents to markdown format using docling, with flexible agent-driven cleanup. Workflow - (1) Load PDF from file or URL, (2) Convert to markdown, (3) Agent reviews document samples and creates custom regexp substitutions in small iterations for issues like wrong heading depths, headers/footers, page numbers, boilerplate (4) Optionally split with agent-proposed delimiters, reviewing filenames and structure. Each PDF is unique - agents adapt cleanup to actual document content through iterative check-correct-verify cycles, not hardcoded rules. IMPORTANT - Use --no-ocr flag for faster processing.
+description: Transform PDFs into pristine markdown optimized for LLM consumption. Uses docling for initial conversion, then AI-driven iterative cleanup to produce publication-quality output with perfect structure, consistent formatting, and zero artifacts. Handles any PDF type through adaptive pattern recognition - no hardcoded rules. Fast processing with --no-ocr flag.
 ---
 
 # PDF to Markdown Converter
