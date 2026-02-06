@@ -50,18 +50,18 @@ The process involves...
    ```
    **Don't copy-paste generic examples - adapt to what you actually found!**
 
-3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+3. **Test**: Preview changes with native `sed` (no modification)
    ```bash
    # These are EXAMPLES - adapt based on step 1 findings:
-   python scripts/apply_substitutions.py document.md -s 's/<!-- image -->//g' --dry-run
-   python scripts/apply_substitutions.py document.md -s 's/^CONFIDENTIAL.*$//' --dry-run
+   sed 's/<!-- image -->//g' document.md | head -20  # Preview first 20 lines
+   sed 's/^CONFIDENTIAL.*$//' document.md | grep -C3 "CONFIDENTIAL" # See what changes
    ```
 
-4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
+4. **Apply**: Use `sed -i.backup` to apply changes (creates automatic backup)
    ```bash
    # Use YOUR patterns from step 3, not these generic examples:
-   python scripts/apply_substitutions.py document.md -s 's/<!-- image -->//g'
-   python scripts/apply_substitutions.py document.md -s 's/^CONFIDENTIAL.*$//'
+   sed -i.backup 's/<!-- image -->//g' document.md
+   sed -i.backup 's/^CONFIDENTIAL.*$//' document.md
    ```
 
 5. **Verify**: Run `python scripts/extract_samples.py document.md`
@@ -102,27 +102,29 @@ python scripts/extract_samples.py document.md
 
 ### Remove Image Placeholders
 ```bash
-python scripts/apply_substitutions.py document.md \
-  -s 's/^<!--.*image.*-->$//g' \
-  --dry-run
+# Preview changes
+sed 's/^<!--.*image.*-->$//g' document.md | head -20
+
+# Apply with backup
+sed -i.backup 's/^<!--.*image.*-->$//g' document.md
 ```
 
 ### Remove Common Boilerplate
 ```bash
-# Remove repeated organizational text
-python scripts/apply_substitutions.py document.md \
-  -s 's/^CONFIDENTIAL.*$//' \
-  -s 's/^INTERNAL USE ONLY.*$//' \
-  --dry-run
+# Remove repeated organizational text (preview first)
+sed 's/^CONFIDENTIAL.*$//' document.md | head -20
+sed 's/^INTERNAL USE ONLY.*$//' document.md | head -20
+
+# Apply with backup
+sed -i.backup 's/^CONFIDENTIAL.*$//' document.md
+sed -i.backup 's/^INTERNAL USE ONLY.*$//' document.md
 ```
 
-### Remove Conversion Artifacts
+### Remove Conversion Artifacts  
 ```bash
 # Remove strange formatting remnants
-python scripts/apply_substitutions.py document.md \
-  -s 's/^_+$//g' \
-  -s 's/^-+$//g' \
-  --dry-run
+sed -i.backup 's/^_+$//g' document.md
+sed -i.backup 's/^-+$//g' document.md
 ```
 
 ## Verification Steps
@@ -145,10 +147,11 @@ If something goes wrong:
 # Restore from backup
 cp document.md.backup document.md
 
-# Try more conservative pattern
-python scripts/apply_substitutions.py document.md \
-  -s 's/^<!-- image -->$//g'  # More specific pattern
-  --dry-run
+# Try more conservative pattern (preview first)
+sed 's/^<!-- image -->$//g' document.md | head -20  # More specific pattern
+
+# Apply if looks good
+sed -i.backup 's/^<!-- image -->$//g' document.md
 ```
 
 ## Success Criteria

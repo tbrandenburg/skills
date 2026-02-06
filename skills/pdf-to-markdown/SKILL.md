@@ -7,63 +7,83 @@ description: Convert PDF documents to markdown format using docling, with flexib
 
 Convert PDF documents to markdown using docling with intelligent cleanup and splitting.
 
-## Quick Start
+## Complete Workflow
 
+Follow these steps **in order** and **thoroughly** for optimal results.
+Use your TODO tool for sticking to the plan.
+
+### Step 1: Environment Setup (One-time)
 ```bash
-# 1. Setup (one-time)
 bash scripts/setup_venv.sh
-
-# 2. Convert PDF (fast mode recommended)
-# Local file:
-python scripts/convert_full.py document.pdf --no-ocr
-# Or URL (docling downloads automatically):
-python scripts/convert_full.py https://example.com/document.pdf --no-ocr
-
-# 3. Iterative cleanup - fix ONE issue at a time:
-python scripts/extract_samples.py document.md                    # Review
-python scripts/apply_substitutions.py document.md -s 'pattern' --dry-run  # Test  
-python scripts/apply_substitutions.py document.md -s 'pattern'             # Apply
-python scripts/extract_samples.py document.md                    # Verify
-
-# 3b. MANDATORY: Check for subordinate elements after Phase 3
-grep "^## Table\|^## Figure\|^## [a-z])\|^## [A-Z][a-z]*[^:]\{0,20\}$" document.md           # Detect Phase 4 issues
-
-# 4. Optional splitting
-python scripts/analyze_split_points.py document.md               # Analyze
-python scripts/split_markdown.py document.md --heading-level 2 --dry-run   # Test
-python scripts/split_markdown.py document.md --heading-level 2             # Apply
 ```
 
-## 5-Phase Cleanup Approach
+### Step 2: PDF Conversion
+Convert your PDF to initial markdown (use `--no-ocr` for faster processing):
 
-**Work iteratively**: **dry-run → apply → verify** each phase:
+```bash
+# Local file:
+python scripts/convert_full.py document.pdf --no-ocr
 
-1. **Document Denoising** → [cleanup-phase1-denoising.md](references/cleanup-phase1-denoising.md)  
-   Remove image placeholders, boilerplate, conversion artifacts
+# Or from URL (docling downloads automatically):
+python scripts/convert_full.py https://example.com/document.pdf --no-ocr
+```
 
-2. **Headers/Footers** → [cleanup-phase2-headers-footers.md](references/cleanup-phase2-headers-footers.md)  
-   Remove page numbers, copyright footers, repeated organizational content
+### Step 3: Follow the 5-Phase Cleanup Process
 
-3. **Basic Numbered Sections** → [cleanup-phase3-basic-numbered-sections.md](references/cleanup-phase3-basic-numbered-sections.md)  
-   Analyze numbering patterns and fix heading depths to match logical document hierarchy
+**🚨 CRITICAL**: Work through **all 5 phases sequentially**. Each phase builds on the previous one:
 
-4. **⚠️ Context-Aware Subordinates** → [cleanup-phase4-context-aware-subordinates.md](references/cleanup-phase4-context-aware-subordinates.md)  
-   **MANDATORY CHECK**: Fix tables, figures, list items incorrectly promoted to H2 headings
-   ```bash
-   # Always run these detection commands after Phase 3:
-   grep "^## Table\|^## Figure\|^## [a-z])\|^## [A-Z][a-z]*[^:]\{0,20\}$" document.md
-   ```
+1. **Phase 1: Document Denoising** → [cleanup-phase1-denoising.md](references/cleanup-phase1-denoising.md)
+2. **Phase 2: Headers/Footers** → [cleanup-phase2-headers-footers.md](references/cleanup-phase2-headers-footers.md)  
+3. **Phase 3: Basic Numbered Sections** → [cleanup-phase3-basic-numbered-sections.md](references/cleanup-phase3-basic-numbered-sections.md)
+4. **Phase 4: Context-Aware Subordinates** → [cleanup-phase4-context-aware-subordinates.md](references/cleanup-phase4-context-aware-subordinates.md)
+5. **Phase 5: Spacing/Formatting** → [cleanup-phase5-spacing-formatting.md](references/cleanup-phase5-spacing-formatting.md)
 
-5. **Spacing/Formatting** → [cleanup-phase5-spacing-formatting.md](references/cleanup-phase5-spacing-formatting.md)  
-   Clean up excessive blank lines, list formatting, table issues
+**For each phase**: Follow the iterative process described in the phase-specific documentation.
 
-## Critical Principles
+### Step 4: Consider Document Splitting
+After completing all 5 phases, evaluate if splitting would improve usability:
+
+```bash
+# Analyze potential split points
+python scripts/analyze_split_points.py document.md
+
+# Test splitting (if desired)
+python scripts/split_markdown.py document.md --heading-level 2 --dry-run
+
+# Apply splitting (if satisfied with test results)
+python scripts/split_markdown.py document.md --heading-level 2
+```
+
+## Key Cleanup Principles
+
+**Work iteratively within each phase**: **dry-run → apply → verify**
 
 - **Small iterations**: Fix 1-2 issues per iteration, not everything at once
 - **Always verify**: Extract samples after EACH change to confirm it worked  
-- **Test first**: ALWAYS use `--dry-run` before applying
+- **Test first**: ALWAYS use `--dry-run` before applying substitutions
 - **Document-specific patterns**: Each PDF is unique - adapt to actual content
-- **Safe recovery**: Use backup files if something goes wrong
+- **Safe recovery**: Automatic backup files created for each change
+
+### Essential Commands for Each Phase
+
+```bash
+# Review document structure and patterns
+python scripts/extract_samples.py document.md
+
+# Test a substitution pattern  
+sed 's/pattern/replacement/' document.md | head -20  # Preview changes
+
+# Apply the pattern (creates automatic backup)
+sed -i.backup 's/pattern/replacement/' document.md
+
+# Verify the change worked as expected
+python scripts/extract_samples.py document.md
+```
+
+**⚠️ Phase 4 Mandatory Check**: After completing Phase 3, always run this detection:
+```bash
+grep "^## Table\|^## Figure\|^## [a-z])\|^## [A-Z][a-z]*[^:]\{0,20\}$" document.md
+```
 
 ## Performance Notes
 
@@ -93,28 +113,32 @@ python scripts/extract_samples.py <markdown_file> [--min-repeats N]
 ```
 Shows document structure and repeated patterns for cleanup planning.
 
-### apply_substitutions.py
+### extract_samples.py  
 ```bash
-python scripts/apply_substitutions.py <markdown_file> -s 'pattern' [--dry-run]
+python scripts/extract_samples.py <markdown_file> [--min-repeats N]
 ```
-Applies sed-style regex substitutions with automatic backup.
+Shows document structure and repeated patterns for cleanup planning.
 
-**Always use `--dry-run` first** to test patterns before applying.
+## Cleanup with Native Sed
 
-Example usage:
+Use native `sed` for regex substitutions (faster and more reliable than Python wrappers):
+
+**Preview changes:**
 ```bash
-# Test a pattern first
-python scripts/apply_substitutions.py document.md -s 's/old/new/g' --dry-run
+sed 's/old/new/g' document.md | head -20  # See first 20 lines of output
+```
 
-# Apply if satisfied with dry-run results
-python scripts/apply_substitutions.py document.md -s 's/old/new/g'
+**Apply changes (with automatic backup):**  
+```bash
+sed -i.backup 's/old/new/g' document.md
 ```
 
 **Pattern Development Strategy:**
 1. Use `extract_samples.py` to identify issues
-2. Develop patterns specific to your document
-3. Test with `--dry-run` 
-4. Apply and verify with `extract_samples.py`
+2. Develop patterns specific to your document  
+3. Test with preview (`sed 's/pattern/replacement/' file`)
+4. Apply with backup (`sed -i.backup 's/pattern/replacement/' file`)
+5. Verify with `extract_samples.py`
 
 See phase-specific documentation for detailed patterns and examples.
 

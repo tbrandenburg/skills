@@ -51,18 +51,18 @@ This document describes...
    ```
    **Don't copy-paste generic examples - adapt to what you actually found!**
 
-3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+3. **Test**: Preview changes with native `sed` (no modification)
    ```bash
    # These are EXAMPLES - adapt based on step 1 findings:
-   python scripts/apply_substitutions.py document.md -s 's/^Page [0-9].*//' --dry-run
-   python scripts/apply_substitutions.py document.md -s 's/^© .*$//' --dry-run
+   sed 's/^Page [0-9].*//' document.md | head -20  # Preview changes
+   sed 's/^© .*$//' document.md | grep -C2 "©"     # Check copyright removal
    ```
 
-4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
+4. **Apply**: Use `sed -i.backup` to apply changes (creates automatic backup)
    ```bash
    # Use YOUR patterns from step 3, not these generic examples:
-   python scripts/apply_substitutions.py document.md -s 's/^Page [0-9].*//' 
-   python scripts/apply_substitutions.py document.md -s 's/^© .*$//'
+   sed -i.backup 's/^Page [0-9].*//' document.md
+   sed -i.backup 's/^© .*$//' document.md
    ```
 
 5. **Verify**: Run `python scripts/extract_samples.py document.md`

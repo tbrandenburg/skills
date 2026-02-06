@@ -82,20 +82,20 @@ Review of documentation...
    python scripts/apply_substitutions.py document.md -s 's/^## (Table [A-Z0-9.-]*.*)/#### \1/' --dry-run
    ```
    **Don't copy-paste generic examples - adapt to what you actually found!**
-3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+3. **Test**: Preview changes with native `sed` (no modification)
    ```bash
    # These are EXAMPLES - adapt based on step 1 findings:
-   python scripts/apply_substitutions.py document.md -s 's/^## (Table [A-Z0-9.].*)/#### \1/' --dry-run  
-   python scripts/apply_substitutions.py document.md -s 's/^## (Figure [A-Z0-9.].*)/#### \1/' --dry-run
-   python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]*[^:]{0,20})$/\*\*\1:\*\*/' --dry-run
+   sed 's/^## (Table [A-Z0-9].*)/#### \1/' document.md | grep -C2 "Table"    # Preview table changes
+   sed 's/^## (Figure [A-Z0-9].*)/#### \1/' document.md | grep -C2 "Figure"  # Preview figure changes
+   sed 's/^## ([A-Z][a-z]*[^:]{0,20})$/\*\*\1:\*\*/' document.md | head -20 # Preview generic terms
    ```
 
-4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
+4. **Apply**: Use `sed -i.backup` to apply changes (creates automatic backup)
    ```bash
    # Use YOUR patterns from step 3, not these generic examples:
-   python scripts/apply_substitutions.py document.md -s 's/^## (Table [A-Z0-9.].*)/#### \1/'
-   python scripts/apply_substitutions.py document.md -s 's/^## (Figure [A-Z0-9.].*)/#### \1/'  
-   python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]*[^:]{0,20})$/\*\*\1:\*\*/'
+   sed -i.backup 's/^## (Table [A-Z0-9].*)/#### \1/' document.md
+   sed -i.backup 's/^## (Figure [A-Z0-9].*)/#### \1/' document.md
+   sed -i.backup 's/^## ([A-Z][a-z]*[^:]{0,20})$/\*\*\1:\*\*/' document.md
    ```
 
 5. **Verify**: Run `python scripts/extract_samples.py document.md`
@@ -111,13 +111,13 @@ Review of documentation...
 **Pattern Templates (adapt to your document):**
 - Tables: `s/^## (Table [A-Z0-9.].*)/#### \1/` (matches "Table 5", "Table A.1 (continued)", "Table E.2 - Example")
 - Figures: `s/^## (Figure [A-Z0-9.].*)/#### \1/` (matches "Figure 6-1", "Figure A.1: Overview")
-- Generic terms: `s/^## ([A-Z][a-z]*[^:]{0,20})$/\*\*\1:\*\*/'` (single words like "Method", "Input")
+- Generic terms: `s/^## ([A-Z][a-z]*[^:]{0,20})$/**\1:**/'` (single words like "Method", "Input")
 
 ⚠️ **CRITICAL**: These are TEMPLATES. Always analyze your document first (step 1) and modify patterns to match what you actually find!
 
 **Example adaptations (based on actual document analysis):**
 - ISO documents: `s/^## (NOTE [0-9]*.*)/#### \1/`, `s/^## (EXAMPLE [0-9]*.*)/#### \1/`
-- Technical manuals: `s/^## (Input|Output|Result)$/\*\*\1:\*\*/'`
+- Technical manuals: `s/^## (Input|Output|Result)$/**\1:**/'`
 - Academic papers: `s/^## ([a-z]\))/\*\*\1\*\*/'`
 - Complex tables: `s/^## (Table [A-Z0-9.]*\s*\(continued\))/#### \1/` (for "(continued)" tables)
 

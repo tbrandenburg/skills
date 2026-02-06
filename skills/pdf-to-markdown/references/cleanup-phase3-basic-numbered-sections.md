@@ -69,18 +69,18 @@ The ASIL determination process...
    ```
    **Don't copy-paste generic examples - adapt to what you actually found!**
 
-3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+3. **Test**: Preview changes with native `sed` (no modification)
    ```bash
    # These are EXAMPLES - adapt based on step 1 findings:
-   python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\s)/## \1/' --dry-run
-   python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\.[0-9]+\s)/### \1/' --dry-run
+   sed 's/^([0-9]+\s)/## \1/' document.md | head -20        # Preview heading changes
+   sed 's/^([0-9]+\.[0-9]+\s)/### \1/' document.md | head -20  # Check subsections
    ```
 
-4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
+4. **Apply**: Use `sed -i.backup` to apply changes (creates automatic backup)
    ```bash
    # Use YOUR patterns from step 3, not these generic examples:
-   python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\s)/## \1/'
-   python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\.[0-9]+\s)/### \1/'
+   sed -i.backup 's/^([0-9]+\s)/## \1/' document.md
+   sed -i.backup 's/^([0-9]+\.[0-9]+\s)/### \1/' document.md
    ```
 
 5. **Verify**: Run `python scripts/extract_samples.py document.md`

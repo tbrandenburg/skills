@@ -84,20 +84,20 @@ With proper spacing...
    ```
    **Don't copy-paste generic examples - adapt to what you actually found!**
 
-3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+3. **Test**: Preview changes with native `sed` (no modification)
    ```bash
    # These are EXAMPLES - adapt based on step 1 findings:
-   python scripts/apply_substitutions.py document.md -s 's/\n\n\n+/\n\n/g' --dry-run
-   python scripts/apply_substitutions.py document.md -s 's/^##([^ ])/## \1/' --dry-run
-   python scripts/apply_substitutions.py document.md -s 's/^###([^ ])/### \1/' --dry-run
+   sed 's/\n\n\n+/\n\n/g' document.md | head -30          # Preview blank line cleanup
+   sed 's/^##([^ ])/## \1/' document.md | grep -E "^##"   # Preview heading spacing
+   sed 's/^###([^ ])/### \1/' document.md | grep -E "^###" # Preview subheading spacing
    ```
 
-4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
+4. **Apply**: Use `sed -i.backup` to apply changes (creates automatic backup)
    ```bash
    # Use YOUR patterns from step 3, not these generic examples:
-   python scripts/apply_substitutions.py document.md -s 's/\n\n\n+/\n\n/g'
-   python scripts/apply_substitutions.py document.md -s 's/^##([^ ])/## \1/'
-   python scripts/apply_substitutions.py document.md -s 's/^###([^ ])/### \1/'
+   sed -i.backup 's/\n\n\n+/\n\n/g' document.md
+   sed -i.backup 's/^##([^ ])/## \1/' document.md
+   sed -i.backup 's/^###([^ ])/### \1/' document.md
    ```
 
 5. **Verify**: Run `python scripts/extract_samples.py document.md`

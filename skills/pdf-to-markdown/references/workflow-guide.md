@@ -26,17 +26,17 @@ This guide provides step-by-step implementation details for the PDF to markdown 
    - Start with most obvious/frequent issue (e.g., page footers appearing 100+ times)
    - Don't try to fix everything at once!
 
-7. **Create regexp for ONE issue**: Generate sed-style pattern for this specific issue
-   - Example: `'s/^Page \d+$//'` for page numbers
+7. **Create sed pattern for ONE issue**: Generate pattern for this specific issue
+   - Example: `'s/^Page [0-9].*$//'` for page numbers
    
-8. **Test with dry-run**: Preview changes before applying
+8. **Test with preview**: Preview changes before applying
    ```bash
-   python scripts/apply_substitutions.py document.md -s 'pattern' --dry-run
+   sed 's/^Page [0-9].*$//' document.md | head -20  # See first 20 lines of output
    ```
 
-9. **Apply if good**: Execute the substitution (auto-backup created)
+9. **Apply if good**: Execute with automatic backup
    ```bash
-   python scripts/apply_substitutions.py document.md -s 'pattern'
+   sed -i.backup 's/^Page [0-9].*$//' document.md
    ```
 
 10. **Verify with samples**: Check that it worked correctly

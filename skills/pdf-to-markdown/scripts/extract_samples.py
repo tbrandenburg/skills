@@ -184,7 +184,7 @@ The agent should examine samples for:
     print()
     
     print("2. Apply cleanup phases:")
-    print("   Phase 1: python scripts/apply_substitutions.py <file> --substitute 's/<!-- image -->//g'")
+    print("   Phase 1: sed -i.backup 's/<!-- image -->//g' <file>")
     if samples['repeated']:
         print("   Phase 2: Remove headers/footers (see repeated patterns above)")
     print("   Phase 3: Fix heading depths:")
