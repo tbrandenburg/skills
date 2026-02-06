@@ -1,251 +1,109 @@
-# Phase 5: Cleanup Spacing and Formatting
+# Phase 5: Spacing and Formatting
 
-This final cleanup phase addresses spacing inconsistencies, formatting artifacts, and document flow issues that remain after content cleanup.
+## Goal
+Clean up inconsistent spacing, remove excessive blank lines, and standardize formatting to create readable, well-structured markdown that follows best practices.
 
-## ⚠️ MANDATORY DETECTION STEP
+## Bad Examples
 
-**Before applying spacing fixes, ALWAYS identify spacing issues:**
+**Excessive blank lines:**
+```markdown
+## 6.1 Overview
 
-```bash
-# REQUIRED: Extract samples to see spacing problems
-python scripts/extract_samples.py document.md --lines 100
 
-# REQUIRED: Check for specific spacing issues
-grep -n "^\s*$" document.md | wc -l    # Count blank lines
-grep -n "  " document.md | head -10     # Find double spaces
-grep -A5 -B5 "|" document.md | head -20 # Check table formatting
+The overview section...
 
-# If excessive blank lines (>200) or formatting issues found, Phase 5 is needed
+
+
+### 6.1.1 Purpose
+
+
+This subsection...
 ```
 
-## Common Spacing Issues
-
-1. **Excessive blank lines** - Multiple consecutive empty lines
-2. **Inconsistent paragraph spacing** - Mixed single/double spacing  
-3. **Heading spacing** - Irregular spacing around section headings
-4. **List formatting** - Poorly formatted bullet points and numbered lists
-5. **Table spacing** - Malformed table structures from PDF conversion
-
-## Basic Spacing Cleanup
-
-### Remove Excessive Blank Lines
-```bash
-# Replace 3+ consecutive blank lines with just 2
-python scripts/apply_substitutions.py document.md \
-  -s 's/\n\n\n+/\n\n/g' \
-  --dry-run
+**Inconsistent heading spacing:**
+```markdown
+##6.2 ASIL determination
+The ASIL determination...
+###6.2.1 Process
+Without proper spacing...
 ```
 
-### Normalize Line Endings
-```bash
-# Ensure consistent line endings (Unix style)
-python scripts/apply_substitutions.py document.md \
-  -s 's/\r\n/\n/g' \
-  --dry-run
+**Mixed formatting patterns:**
+```markdown
+**Input**: Data from analysis
+Input: More data here
+*Output*: Results
+**Output**: Different formatting
 ```
 
-### Clean Trailing Whitespace  
-```bash
-# Remove spaces at end of lines
-python scripts/apply_substitutions.py document.md \
-  -s 's/ +$//' \
-  --dry-run
+## Good Examples
+
+**Consistent blank line spacing:**
+```markdown
+## 6.1 Overview
+
+The overview section...
+
+### 6.1.1 Purpose
+
+This subsection...
 ```
 
-## Heading Formatting
+**Proper heading spacing:**
+```markdown
+## 6.2 ASIL determination
 
-### Consistent Heading Spacing
-```bash
-# Ensure headings have proper spacing before them
-python scripts/apply_substitutions.py document.md \
-  -s 's/\n(^## )/\n\n\1/g' \
-  --dry-run
+The ASIL determination...
+
+### 6.2.1 Process
+
+With proper spacing...
 ```
 
-### Remove Extra Spaces in Headings
-```bash
-# Clean up double spaces in headings
-python scripts/apply_substitutions.py document.md \
-  -s 's/^(#{1,6}) +(.+)/\1 \2/g' \
-  --dry-run
+**Standardized formatting:**
+```markdown
+**Input:** Data from analysis
+**Input:** More data here  
+**Output:** Results
+**Output:** Consistent formatting
 ```
 
-## List Formatting
+## Workflow
 
-### Fix Bullet Point Alignment
-```bash
-# Standardize bullet point format
-python scripts/apply_substitutions.py document.md \
-  -s 's/^[*+-] /- /g' \
-  --dry-run
-```
+1. **Detect**: Run `python scripts/extract_samples.py document.md`
+   - Look for multiple consecutive blank lines (3+ empty lines)
+   - Check for headings without spaces after # markers
+   - Find inconsistent bold/italic patterns
 
-### Fix Numbered List Format
-```bash
-# Ensure proper numbered list spacing
-python scripts/apply_substitutions.py document.md \
-  -s 's/^(\d+)\./\1. /g' \
-  --dry-run
-```
+2. **Test**: Apply patterns with `--dry-run`
+   ```bash
+   python scripts/apply_substitutions.py document.md -s 's/\n\n\n+/\n\n/g' --dry-run
+   python scripts/apply_substitutions.py document.md -s 's/^##([^ ])/## \1/' --dry-run
+   python scripts/apply_substitutions.py document.md -s 's/^###([^ ])/### \1/' --dry-run
+   ```
 
-### Fix Nested List Indentation
-```bash
-# Fix inconsistent indentation
-python scripts/apply_substitutions.py document.md \
-  -s 's/^   - /  - /g' \
-  --dry-run
-```
+3. **Apply**: Remove `--dry-run` flag
+   ```bash
+   python scripts/apply_substitutions.py document.md -s 's/\n\n\n+/\n\n/g'
+   python scripts/apply_substitutions.py document.md -s 's/^##([^ ])/## \1/'
+   python scripts/apply_substitutions.py document.md -s 's/^###([^ ])/### \1/'
+   ```
 
-## Table Cleanup
+4. **Verify**: Run `python scripts/extract_samples.py document.md`
+   - Confirm no excessive blank lines in samples
+   - Check headings have proper spacing
+   - Verify consistent formatting patterns
 
-### Fix Table Alignment
-```bash
-# Clean up pipe-separated tables
-python scripts/apply_substitutions.py document.md \
-  -s 's/ *\| */|/g' \
-  --dry-run
-```
+5. **Iterate**: Repeat steps 1-4 for edge cases like trailing spaces, mixed emphasis
 
-### Remove Broken Table Fragments
-```bash
-# Remove incomplete table separators
-python scripts/apply_substitutions.py document.md \
-  -s 's/^[|+-]+$//g' \
-  --dry-run
-```
+## Appendix
 
-## Text Flow Issues
+**Standard patterns:**
+- Excessive blanks: `s/\n\n\n+/\n\n/g`
+- Heading spacing: `s/^##([^ ])/## \1/`, `s/^###([^ ])/### \1/`
+- Trailing spaces: `s/[ \t]+$//g`
 
-### Fix Hyphenated Words Split Across Lines
-```bash
-# Common word breaks from PDF conversion
-python scripts/apply_substitutions.py document.md \
-  -s 's/manage-\nment/management/g' \
-  -s 's/develop-\nment/development/g' \
-  --dry-run
-```
-
-### Fix Paragraph Breaks
-```bash
-# Join lines that were incorrectly split
-# (Be very careful with this - test thoroughly)
-python scripts/apply_substitutions.py document.md \
-  -s 's/([a-z])\n([a-z])/\1 \2/g' \
-  --dry-run
-```
-
-## Advanced Formatting
-
-### Fix Quote Formatting
-```bash
-# Standardize quote marks
-python scripts/apply_substitutions.py document.md \
-  -s 's/"/"/g' \
-  -s 's/"/"/g' \
-  --dry-run
-```
-
-### Fix Em Dashes and Hyphens  
-```bash
-# Standardize dash usage
-python scripts/apply_substitutions.py document.md \
-  -s 's/—/--/g' \
-  -s 's/–/-/g' \
-  --dry-run
-```
-
-## Document-Specific Patterns
-
-### Technical Documents
-```bash
-# Fix common technical formatting
-python scripts/apply_substitutions.py document.md \
-  -s 's/\bVer\. /Version /g' \
-  -s 's/\bFig\. /Figure /g' \
-  --dry-run
-```
-
-### Legal Documents
-```bash
-# Fix legal citation formats
-python scripts/apply_substitutions.py document.md \
-  -s 's/§ (\d+)/Section \1/g' \
-  --dry-run
-```
-
-## Verification Methods
-
-### 1. Visual Review
-```bash
-# Check a sample of the cleaned document
-python scripts/extract_samples.py document.md --lines 100
-```
-
-### 2. Line Count Changes
-```bash
-# Compare line counts to see impact
-wc -l document.md.backup document.md
-```
-
-### 3. Search for Common Issues
-```bash
-# Look for remaining formatting problems
-grep -n "  " document.md | head -10    # Double spaces
-grep -n "^\s*$" document.md | wc -l    # Count blank lines
-```
-
-### 4. Table Structure Check
-```bash
-# Verify tables are properly formatted
-grep -A5 -B5 "|" document.md | head -20
-```
-
-## Iterative Approach
-
-Apply spacing fixes in small batches:
-
-1. **Basic cleanup first**: Excessive blank lines, trailing spaces
-2. **Heading spacing**: Consistent spacing around sections  
-3. **List formatting**: Fix bullets and numbering
-4. **Table cleanup**: Address table formatting issues
-5. **Advanced fixes**: Word breaks, paragraph flow
-
-Each step: **dry-run → apply → verify**
-
-## Success Criteria
-
-1. **Consistent spacing**: No excessive blank lines (>2 consecutive)
-2. **Clean headings**: Proper spacing and formatting around all headings  
-3. **Readable lists**: Well-formatted bullet points and numbered lists
-4. **Proper tables**: Tables render correctly in markdown viewers
-5. **Flow integrity**: Text reads naturally without formatting artifacts
-6. **Professional appearance**: Document looks polished and ready for use
-
-## Recovery Strategy
-
-If formatting fixes break content:
-
-```bash
-# Restore from backup
-cp document.md.backup document.md
-
-# Apply only the safest fixes
-python scripts/apply_substitutions.py document.md \
-  -s 's/\n\n\n+/\n\n/g'  # Just fix excessive blank lines
-  --dry-run
-```
-
-## Final Quality Check
-
-After all formatting cleanup:
-
-```bash
-# Extract final samples to verify quality
-python scripts/extract_samples.py document.md
-
-# Check document structure one last time  
-python scripts/analyze_split_points.py document.md
-
-# Verify no critical content was lost
-diff -u document.md.backup document.md | head -50
-```
+**Formatting consistency:**
+- Bold patterns: `s/\*([^*]+)\*/\*\*\1\*\*/g`
+- List spacing: `s/^([*-]) /\1 /` 
+- Code blocks: `s/^```([a-z]*)/```\1/`

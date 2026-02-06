@@ -1,13 +1,75 @@
-# Phase 2: Remove Headers and Footers
+# Phase 2: Headers and Footers
 
-This phase targets repeated headers and footers that appear throughout the document from the original PDF pagination and corporate formatting.
+## Goal
+Remove repeated headers and footers from PDF pagination, copyright notices, page numbers, and document titles that appear throughout the converted markdown.
 
-## Common Header/Footer Patterns
+## Bad Examples
 
-1. **Page numbers** - "Page 1", "Page 15 of 200", etc.
-2. **Copyright notices** - Repeated on every page
-3. **Document titles** - Company names, document titles repeated as headers
-4. **Organizational footers** - Department names, confidentiality notices
+**Page numbers scattered throughout:**
+```markdown
+## 4.1 Requirements
+Page 15 of 200
+The requirements include...
+Page 16 of 200
+```
+
+**Corporate footers everywhere:**
+```markdown
+## Introduction  
+ISO 26262 Road Vehicles — Functional Safety
+This document describes...
+© ISO 2018 - All rights reserved
+```
+
+## Good Examples
+
+**Clean sections without pagination:**
+```markdown
+## 4.1 Requirements
+The requirements include...
+```
+
+**Content without corporate footers:**
+```markdown
+## Introduction
+This document describes...
+```
+
+## Workflow
+
+1. **Detect**: Run `python scripts/extract_samples.py document.md`
+   - Look for "REPEATED LINES" with page numbers, copyright, titles
+   - Check samples for corporate footers at section ends
+   - Identify document title repetition patterns
+
+2. **Test**: Apply patterns with `--dry-run`
+   ```bash
+   python scripts/apply_substitutions.py document.md -s 's/^Page [0-9].*//' --dry-run
+   python scripts/apply_substitutions.py document.md -s 's/^© .*$//' --dry-run
+   ```
+
+3. **Apply**: Remove `--dry-run` flag
+   ```bash  
+   python scripts/apply_substitutions.py document.md -s 's/^Page [0-9].*//'
+   python scripts/apply_substitutions.py document.md -s 's/^© .*$//'
+   ```
+
+4. **Verify**: Run `python scripts/extract_samples.py document.md`
+   - Confirm page numbers disappeared from samples
+   - Check no copyright footers in sections
+
+5. **Iterate**: Repeat steps 1-4 until all headers/footers removed
+
+## Appendix
+
+**Common patterns:**
+- Page numbers: `s/^Page [0-9].*/`, `s/Page [0-9]+ of [0-9]+//g`
+- Copyright: `s/^© .*[0-9]{4}.*/`, `s/All rights reserved.*//g`
+- Document titles: `s/^ISO [0-9].*/`, `s/^[A-Z][A-Z ]+$/` (repeated company names)
+
+**Document-specific examples:**
+- ISO: `s/^ISO 26262.*/`
+- Corporate: `s/Normen-Download-Beuth.*/`, `s/CONFIDENTIAL.*$/`
 5. **Date stamps** - Revision dates repeated as footers
 
 ## Identification Strategy

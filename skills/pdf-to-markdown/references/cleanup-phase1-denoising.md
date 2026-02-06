@@ -1,13 +1,76 @@
-# Phase 1: Document Denoising and Deboilerplating
+# Phase 1: Document Denoising
 
-The first cleanup phase removes conversion artifacts and repeated boilerplate content that doesn't add value to the final document.
+## Goal
+Remove conversion artifacts and repeated boilerplate content that doesn't add value to the final document. Clean up image placeholders, organizational footers, and PDF conversion remnants.
 
-## ⚠️ MANDATORY DETECTION STEP
+## Bad Examples
 
-**Before applying any patterns, ALWAYS identify what needs to be cleaned:**
+**Image placeholders everywhere:**
+```markdown
+## Introduction
+<!-- image -->
+This section covers...
+<!-- image -->
+The process involves...
+<!-- image -->
+```
 
-```bash
-# REQUIRED: Extract samples to see document structure and repeated patterns
+**Repeated boilerplate:**
+```markdown
+CONFIDENTIAL - Internal Use Only
+CONFIDENTIAL - Internal Use Only  
+CONFIDENTIAL - Internal Use Only
+(appears 47 times throughout document)
+```
+
+## Good Examples
+
+**Clean content without artifacts:**
+```markdown
+## Introduction
+This section covers...
+The process involves...
+```
+
+**No repeated organizational text** - boilerplate removed completely.
+
+## Workflow
+
+1. **Detect**: Run `python scripts/extract_samples.py document.md`
+   - Look for "REPEATED LINES" section (10+ occurrences = boilerplate)
+   - Check samples for `<!-- image -->` patterns
+   - Identify conversion artifacts (strange formatting)
+
+2. **Test**: Apply patterns with `--dry-run`
+   ```bash
+   python scripts/apply_substitutions.py document.md -s 's/<!-- image -->//g' --dry-run
+   python scripts/apply_substitutions.py document.md -s 's/^CONFIDENTIAL.*$//' --dry-run
+   ```
+
+3. **Apply**: Remove `--dry-run` flag
+   ```bash  
+   python scripts/apply_substitutions.py document.md -s 's/<!-- image -->//g'
+   python scripts/apply_substitutions.py document.md -s 's/^CONFIDENTIAL.*$//'
+   ```
+
+4. **Verify**: Run `python scripts/extract_samples.py document.md`
+   - Confirm patterns disappeared from "REPEATED LINES" 
+   - Check samples show clean content
+
+5. **Iterate**: Repeat steps 1-4 until no more conversion artifacts or boilerplate found
+
+## Appendix
+
+**Common patterns:**
+- Image placeholders: `s/<!--.*image.*-->//g`
+- Boilerplate: `s/^CONFIDENTIAL.*$//`, `s/^INTERNAL USE ONLY.*$/`  
+- Artifacts: `s/^_+$//g`, `s/^-+$//g`
+- Empty blocks: `s/^\s*$\n^\s*$/\n/g`
+
+**Document-specific examples:**
+- Beuth headers: `s/Normen-Download-Beuth.*//g`
+- ISO footers: `s/^© ISO 20[0-9][0-9].*$//`
+- Corporate: `s/No disclosure to third parties.*//g`
 python scripts/extract_samples.py document.md
 
 # Look in the output for:
