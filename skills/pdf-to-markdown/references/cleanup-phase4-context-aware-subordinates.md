@@ -1,12 +1,35 @@
-# Phase 3: Fix Heading Structure and Depths
+# Phase 4: Context-Aware Subordinate Elements
 
-This phase corrects the markdown heading hierarchy to match the document's logical structure. **Works in two sub-phases: 3a (basic numbering) and 3b (context-aware subordinates).**
+This phase fixes subordinate elements (tables, figures, list items) that were incorrectly promoted to major section headings. **Critical step that's often overlooked but essential for proper document hierarchy.**
+
+## ⚠️ MANDATORY DETECTION STEP
+
+**Before moving to Phase 5, ALWAYS check for these subordinate elements:**
+
+```bash
+# REQUIRED: Check for tables promoted to H2 (should be H4)
+grep -n "^## Table" document.md
+
+# REQUIRED: Check for figures promoted to H2 (should be H4)  
+grep -n "^## Figure" document.md
+
+# REQUIRED: Check for orphaned list items (should be content)
+grep -n "^## [a-z])" document.md
+
+# REQUIRED: Check for generic subordinate elements (should be H4)
+grep -n "^## \(Method\|Procedure\|Protocol\|Standard\|Requirement\|Recommendation\|Example\|Note\)" document.md
+
+# REQUIRED: Check for any single-word H2 that might be subordinate
+grep -n "^## [A-Z][a-z]*[^:]\{0,20\}$" document.md
+
+# If ANY of these return results, Phase 4 is REQUIRED
+```
 
 ## Core Principle
 
-**Heading depth should reflect content hierarchy, not visual appearance.**
+**Tables, figures, and list items should be subordinate to their parent sections, not standalone major headings.**
 
-The goal is to analyze your document's actual structure and create patterns that match its specific organization.
+The goal is to identify and fix elements that were incorrectly promoted during PDF conversion.
 
 ## Analysis Strategy
 
@@ -266,7 +289,7 @@ grep -c "^## [0-9]\\+\\.[0-9]\\+\\.[0-9]\\+" document.md
 
 The key is to **analyze first, pattern second** - let your document's actual structure guide the patterns, not predefined assumptions.
 
-## Phase 3b: Context-Aware Subordinate Element Corrections
+## Phase 4: Context-Aware Subordinate Element Corrections
 
 **Problem Solved**: Tables, figures, and other elements that logically belong under their parent sections but were promoted to inappropriate heading levels.
 
@@ -289,6 +312,22 @@ After correction:
 ```
 
 ### Generic Patterns for Subordinate Elements
+
+#### Generic Subordinate Elements
+Fix single-word headings that were incorrectly promoted to H2 (Method, Procedure, Protocol, etc.):
+```bash
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]*[^:]\{0,20\}$)/#### \1/g' --dry-run
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]*[^:]\{0,20\}$)/#### \1/g'
+```
+
+This pattern catches common subordinate elements like:
+- `## Method` → `#### Method`
+- `## Procedure` → `#### Procedure`  
+- `## Protocol` → `#### Protocol`
+- `## Standard` → `#### Standard`
+- `## Requirement` → `#### Requirement`
+- `## Example` → `#### Example`
+- And any other single capitalized word that shouldn't be a major section
 
 #### Tables
 Fix tables that were incorrectly promoted to H2:
@@ -346,17 +385,20 @@ grep -n "^## Table" document.md
 # Find figures that might be at wrong level  
 grep -n "^## Figure" document.md
 
+# Find suspicious single-word H2 headings that might be subordinate
+grep -n "^## [A-Z][a-z]*[^:]\{0,20\}$" document.md
+
 # Find named elements that might be at wrong level (generic pattern)
-grep -n "^## [A-Z][a-z]\\+ [a-z]\\+ [A-Z0-9-]\\+" document.md
+grep -n "^## [A-Z][a-z]\+ [a-z]\+ [A-Z0-9-]\+" document.md
 
 # Find list items that became headings
 grep -n "^## [a-z]) " document.md
 
 # Find potential appendix issues
-grep -n "^## [A-Z]\\." document.md
+grep -n "^## [A-Z]\." document.md
 ```
 
-### Verification After Phase 3b
+### Verification After Phase 4
 
 Check that the hierarchy makes sense:
 ```bash
@@ -389,22 +431,27 @@ Look for:
 - Steps: `#### Step 1: Download` → H4 ✓
 - Screenshots: `#### Figure 3-1: Main Menu` → H4 ✓
 
-### Complete Phase 3 Workflow
+### Complete Phase 4 Workflow
 
 ```bash
-# Phase 3a: Basic numbered section corrections
-python scripts/apply_substitutions.py document.md -s 's/^## ([0-9]+\\.[0-9]+\\.[0-9]+)/### \\1/g'
-python scripts/apply_substitutions.py document.md -s 's/^## ([0-9]+\\.[0-9]+) /### \\1 /g'
+# Detection first - check for subordinate elements
+grep -n "^## Table\|^## Figure\|^## [a-z])\|^## [A-Z][a-z]*[^:]\{0,20\}$" document.md
 
-# Phase 3b: Context-aware subordinate corrections  
-python scripts/apply_substitutions.py document.md -s 's/^## (Table [0-9A-Za-z\\. ]+.*)/#### \\1/g'
-python scripts/apply_substitutions.py document.md -s 's/^## (Figure [0-9A-Za-z\\. ]+.*)/#### \\1/g'  
-python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]+ [a-z]+ [A-Z0-9-]+.*)/#### \\1/g'
-python scripts/apply_substitutions.py document.md -s 's/^## ([a-z]\\) .*)/#### \\1/g'
+# If found, apply appropriate fixes:
+# Tables and figures
+python scripts/apply_substitutions.py document.md -s 's/^## (Table [0-9A-Za-z\. ]+.*)/#### \1/g'
+python scripts/apply_substitutions.py document.md -s 's/^## (Figure [0-9A-Za-z\. ]+.*)/#### \1/g'
+
+# Generic single-word subordinate elements
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]*[^:]\{0,20\}$)/#### \1/g'
+
+# Named elements and list items
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]+ [a-z]+ [A-Z0-9-]+.*)/#### \1/g'
+python scripts/apply_substitutions.py document.md -s 's/^## ([a-z]\) .*)/- \1/g'
 python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z]\\.[0-9]+.*)/### \\1/g'
 
 # Verification
 python scripts/extract_samples.py document.md
 ```
 
-This two-phase approach ensures both structural consistency (3a) and contextual appropriateness (3b) while remaining generic and adaptable to any document type.
+This two-phase approach ensures both structural consistency (3a) and contextual appropriateness (4) while remaining generic and adaptable to any document type.

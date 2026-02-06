@@ -2,6 +2,20 @@
 
 The first cleanup phase removes conversion artifacts and repeated boilerplate content that doesn't add value to the final document.
 
+## ⚠️ MANDATORY DETECTION STEP
+
+**Before applying any patterns, ALWAYS identify what needs to be cleaned:**
+
+```bash
+# REQUIRED: Extract samples to see document structure and repeated patterns
+python scripts/extract_samples.py document.md
+
+# Look in the output for:
+# - "REPEATED LINES" section (10+ occurrences indicate boilerplate)
+# - Image placeholders in samples (<!-- image --> patterns)
+# - Conversion artifacts (strange formatting, empty lines)
+```
+
 ## Common Issues to Address
 
 1. **Image placeholders** - PDF converters often leave `<!-- image -->` markers

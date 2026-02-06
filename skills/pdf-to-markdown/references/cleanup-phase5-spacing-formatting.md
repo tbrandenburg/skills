@@ -1,6 +1,22 @@
-# Phase 4: Cleanup Spacing and Formatting
+# Phase 5: Cleanup Spacing and Formatting
 
 This final cleanup phase addresses spacing inconsistencies, formatting artifacts, and document flow issues that remain after content cleanup.
+
+## ⚠️ MANDATORY DETECTION STEP
+
+**Before applying spacing fixes, ALWAYS identify spacing issues:**
+
+```bash
+# REQUIRED: Extract samples to see spacing problems
+python scripts/extract_samples.py document.md --lines 100
+
+# REQUIRED: Check for specific spacing issues
+grep -n "^\s*$" document.md | wc -l    # Count blank lines
+grep -n "  " document.md | head -10     # Find double spaces
+grep -A5 -B5 "|" document.md | head -20 # Check table formatting
+
+# If excessive blank lines (>200) or formatting issues found, Phase 5 is needed
+```
 
 ## Common Spacing Issues
 

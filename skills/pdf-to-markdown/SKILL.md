@@ -25,6 +25,9 @@ python scripts/apply_substitutions.py document.md -s 'pattern' --dry-run  # Test
 python scripts/apply_substitutions.py document.md -s 'pattern'             # Apply
 python scripts/extract_samples.py document.md                    # Verify
 
+# 3b. MANDATORY: Check for subordinate elements after Phase 3
+grep "^## Table\|^## Figure\|^## [a-z])\|^## [A-Z][a-z]*[^:]\{0,20\}$" document.md           # Detect Phase 4 issues
+
 # 4. Optional splitting
 python scripts/analyze_split_points.py document.md               # Analyze
 python scripts/split_markdown.py document.md --heading-level 2 --dry-run   # Test
@@ -44,8 +47,12 @@ python scripts/split_markdown.py document.md --heading-level 2             # App
 3. **Basic Numbered Sections** → [cleanup-phase3-basic-numbered-sections.md](references/cleanup-phase3-basic-numbered-sections.md)  
    Analyze numbering patterns and fix heading depths to match logical document hierarchy
 
-4. **Context-Aware Subordinates** → [cleanup-phase4-context-aware-subordinates.md](references/cleanup-phase4-context-aware-subordinates.md)  
-   Fix subordinate element corrections (tables, figures, list items)
+4. **⚠️ Context-Aware Subordinates** → [cleanup-phase4-context-aware-subordinates.md](references/cleanup-phase4-context-aware-subordinates.md)  
+   **MANDATORY CHECK**: Fix tables, figures, list items incorrectly promoted to H2 headings
+   ```bash
+   # Always run these detection commands after Phase 3:
+   grep "^## Table\|^## Figure\|^## [a-z])\|^## [A-Z][a-z]*[^:]\{0,20\}$" document.md
+   ```
 
 5. **Spacing/Formatting** → [cleanup-phase5-spacing-formatting.md](references/cleanup-phase5-spacing-formatting.md)  
    Clean up excessive blank lines, list formatting, table issues
@@ -92,23 +99,24 @@ python scripts/apply_substitutions.py <markdown_file> -s 'pattern' [--dry-run]
 ```
 Applies sed-style regex substitutions with automatic backup.
 
-Example pattern suggestions (adapt to your document):
+**Always use `--dry-run` first** to test patterns before applying.
 
-**Phase 3 - Basic numbered sections:**
-- Fix heading depths: `-s 's/^## ([0-9]+\.[0-9]+\.[0-9]+)/### \1/g'`
-- Fix subsections: `-s 's/^## ([0-9]+\.[0-9]+) /### \1 /g'`
+Example usage:
+```bash
+# Test a pattern first
+python scripts/apply_substitutions.py document.md -s 's/old/new/g' --dry-run
 
-**Phase 4 - Context-aware subordinates:**
-- Tables: `-s 's/^## (Table [0-9A-Za-z\. ]+.*)/#### \1/g'`
-- Figures: `-s 's/^## (Figure [0-9A-Za-z\. ]+.*)/#### \1/g'`
-- Named elements: `-s 's/^## ([A-Z][a-z]+ [a-z]+ [A-Z0-9-]+.*)/#### \1/g'`
-- List items: `-s 's/^## ([a-z]\) .*)/#### \1/g'`
+# Apply if satisfied with dry-run results
+python scripts/apply_substitutions.py document.md -s 's/old/new/g'
+```
 
-**Phase 2 - Headers/footers:**
-- Remove page numbers: `-s 's/^Page \d+$//g'`
-- Remove copyright: `-s 's/^© .*$//g'`
+**Pattern Development Strategy:**
+1. Use `extract_samples.py` to identify issues
+2. Develop patterns specific to your document
+3. Test with `--dry-run` 
+4. Apply and verify with `extract_samples.py`
 
-Note: Analyze your document's actual patterns first - don't use fixed regex!
+See phase-specific documentation for detailed patterns and examples.
 
 ### analyze_split_points.py / split_markdown.py
 ```bash
