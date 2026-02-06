@@ -63,7 +63,7 @@ The ASIL determination process...
 #### 6.2.2 Step two
 ```
 
-## Surgical Workflow
+## Workflow
 
 1. **Analyze**: Run `python scripts/extract_samples.py document.md`
    - Examine HEADING PATTERNS section carefully
@@ -72,7 +72,7 @@ The ASIL determination process...
    - Find flattened hierarchy: `## 6.1.1` when it should be `####`
    - **CRITICAL**: Document what's BROKEN vs what's ALREADY CORRECT
 
-2. **Plan**: Create specific detection patterns
+2. **Detect**: Create specific detection patterns
    ```bash
    # Find plain text numbered sections (missing # entirely)
    grep "^[0-9]\+\.[0-9]\+ [A-Z]" document.md
@@ -82,7 +82,7 @@ The ASIL determination process...
    grep "^### [0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+" document.md   # 4-level at ### (should be ####)
    ```
 
-3. **SURGICAL PATTERNS**: Create TARGETED patterns for IDENTIFIED issues only
+3. **Plan**: Create TARGETED patterns for IDENTIFIED issues only
    ```bash
    # ONLY if step 2 found issues - adapt patterns to YOUR findings:
    # Plain text → headings: 's/^([0-9]+\.[0-9]+ [A-Z])/### \1/'
@@ -90,19 +90,19 @@ The ASIL determination process...
    ```
    **NEVER use blanket patterns like 's/^## ([0-9]+\.[0-9]+)/### \1/'** 
 
-4. **SURGICAL TEST**: Preview ONLY the changes needed
+4. **Test**: Preview ONLY the changes needed
    ```bash
    # Test ONLY patterns for issues you identified in step 2:
    sed 's/^([0-9]+\.[0-9]+ [A-Z])/### \1/' document.md | grep -E "^#{2,4} [0-9]" | head -20
    ```
 
-5. **APPLY SURGICALLY**: Fix ONLY identified issues
+5. **Apply**: Fix ONLY identified issues
    ```bash
    # Apply ONLY patterns for confirmed issues:
    sed -i.backup 's/^([0-9]+\.[0-9]+ [A-Z])/### \1/' document.md  # Example - adapt to YOUR needs
    ```
 
-6. **VERIFY SURGICALLY**: Check only affected sections
+6. **Verify**: Check only affected sections
    ```bash
    # Check hierarchy around modified sections:
    python scripts/extract_samples.py document.md | grep -A10 -B10 "HEADING PATTERNS"
