@@ -42,7 +42,8 @@ python scripts/split_markdown.py document.md --heading-level 2             # App
    Remove page numbers, copyright footers, repeated organizational content
 
 3. **Heading Structure** → [cleanup-phase3-heading-structure.md](references/cleanup-phase3-heading-structure.md)  
-   Analyze numbering patterns and fix heading depths to match logical document hierarchy
+   - **3a**: Analyze numbering patterns and fix heading depths to match logical document hierarchy
+   - **3b**: Context-aware subordinate element corrections (tables, figures, list items)
 
 4. **Spacing/Formatting** → [cleanup-phase4-spacing-formatting.md](references/cleanup-phase4-spacing-formatting.md)  
    Clean up excessive blank lines, list formatting, table issues
@@ -90,7 +91,18 @@ python scripts/apply_substitutions.py <markdown_file> -s 'pattern' [--dry-run]
 Applies sed-style regex substitutions with automatic backup.
 
 Example pattern suggestions (adapt to your document):
-- Fix heading depths: `-s 's/^## (NUMBERING_PATTERN)/### \1/g'`  
+
+**Phase 3a - Basic numbered sections:**
+- Fix heading depths: `-s 's/^## ([0-9]+\.[0-9]+\.[0-9]+)/### \1/g'`
+- Fix subsections: `-s 's/^## ([0-9]+\.[0-9]+) /### \1 /g'`
+
+**Phase 3b - Context-aware subordinates:**
+- Tables: `-s 's/^## (Table [0-9A-Za-z\. ]+.*)/#### \1/g'`
+- Figures: `-s 's/^## (Figure [0-9A-Za-z\. ]+.*)/#### \1/g'`
+- Named elements: `-s 's/^## ([A-Z][a-z]+ [a-z]+ [A-Z0-9-]+.*)/#### \1/g'`
+- List items: `-s 's/^## ([a-z]\) .*)/#### \1/g'`
+
+**Phase 2 - Headers/footers:**
 - Remove page numbers: `-s 's/^Page \d+$//g'`
 - Remove copyright: `-s 's/^© .*$//g'`
 

@@ -1,6 +1,6 @@
 # Phase 3: Fix Heading Structure and Depths
 
-This phase corrects the markdown heading hierarchy to match the document's logical structure. PDF converters often assign incorrect heading levels based on visual formatting rather than semantic meaning.
+This phase corrects the markdown heading hierarchy to match the document's logical structure. **Works in two sub-phases: 3a (basic numbering) and 3b (context-aware subordinates).**
 
 ## Core Principle
 
@@ -265,3 +265,146 @@ grep -c "^## [0-9]\\+\\.[0-9]\\+\\.[0-9]\\+" document.md
 ```
 
 The key is to **analyze first, pattern second** - let your document's actual structure guide the patterns, not predefined assumptions.
+
+## Phase 3b: Context-Aware Subordinate Element Corrections
+
+**Problem Solved**: Tables, figures, and other elements that logically belong under their parent sections but were promoted to inappropriate heading levels.
+
+### Common Issue Example
+```markdown
+### 8.4.2 The software unit design and implementation shall:
+- a) be suitable to satisfy requirements...
+- d) verifiability.
+
+## Table 5 - Notations for software unit design  ← Wrong! Should be H4
+```
+
+After correction:
+```markdown  
+### 8.4.2 The software unit design and implementation shall:
+- a) be suitable to satisfy requirements...
+- d) verifiability.
+
+#### Table 5 - Notations for software unit design  ← Correct! Now H4
+```
+
+### Generic Patterns for Subordinate Elements
+
+#### Tables
+Fix tables that were incorrectly promoted to H2:
+```bash
+python scripts/apply_substitutions.py document.md -s 's/^## (Table [0-9A-Za-z\\. ]+.*)/#### \\1/g' --dry-run
+python scripts/apply_substitutions.py document.md -s 's/^## (Table [0-9A-Za-z\\. ]+.*)/#### \\1/g'
+```
+
+#### Figures  
+Fix figures that were incorrectly promoted to H2:
+```bash
+python scripts/apply_substitutions.py document.md -s 's/^## (Figure [0-9A-Za-z\\. ]+.*)/#### \\1/g' --dry-run
+python scripts/apply_substitutions.py document.md -s 's/^## (Figure [0-9A-Za-z\\. ]+.*)/#### \\1/g'
+```
+
+#### List Continuation Items
+Fix orphaned list items (a), b), c), h) verifiability, etc.) that became H2:
+```bash
+python scripts/apply_substitutions.py document.md -s 's/^## ([a-z]\\) .*)/#### \\1/g' --dry-run
+python scripts/apply_substitutions.py document.md -s 's/^## ([a-z]\\) .*)/#### \\1/g'
+```
+
+#### Named Elements  
+Fix named elements that should be subordinate (methods, procedures, ratings, etc.):
+```bash
+# Generic pattern covers: "Rating method R2", "Test procedure TP-1", "Assessment tool AT-3", etc.
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]+ [a-z]+ [A-Z0-9-]+.*)/#### \\1/g' --dry-run
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]+ [a-z]+ [A-Z0-9-]+.*)/#### \\1/g'
+```
+
+#### Appendix Subsections
+Fix appendix items that should be subsections:
+```bash
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z]\\.[0-9]+.*)/### \\1/g' --dry-run
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z]\\.[0-9]+.*)/### \\1/g'
+```
+
+#### Notes and Examples
+Fix NOTE, EXAMPLE, or similar that became headings:
+```bash
+python scripts/apply_substitutions.py document.md -s 's/^## (NOTE[0-9]* .*)/#### \\1/g' --dry-run
+python scripts/apply_substitutions.py document.md -s 's/^## (NOTE[0-9]* .*)/#### \\1/g'
+
+python scripts/apply_substitutions.py document.md -s 's/^## (EXAMPLE[0-9]* .*)/#### \\1/g' --dry-run  
+python scripts/apply_substitutions.py document.md -s 's/^## (EXAMPLE[0-9]* .*)/#### \\1/g'
+```
+
+### Detection Strategy
+
+First, identify problematic headings:
+```bash
+# Find tables that might be at wrong level
+grep -n "^## Table" document.md
+
+# Find figures that might be at wrong level  
+grep -n "^## Figure" document.md
+
+# Find named elements that might be at wrong level (generic pattern)
+grep -n "^## [A-Z][a-z]\\+ [a-z]\\+ [A-Z0-9-]\\+" document.md
+
+# Find list items that became headings
+grep -n "^## [a-z]) " document.md
+
+# Find potential appendix issues
+grep -n "^## [A-Z]\\." document.md
+```
+
+### Verification After Phase 3b
+
+Check that the hierarchy makes sense:
+```bash
+python scripts/extract_samples.py document.md
+```
+
+Look for:
+- ✅ Tables/figures at H4 level under their relevant sections
+- ✅ No orphaned list items at H2 level  
+- ✅ Proper flow: H2 → H3 → H4 → content
+- ✅ Appendix sections at appropriate depth
+
+### Document-Type Specific Adaptations
+
+**Technical Standards (ISO, ASPICE, etc.):**
+- Main clauses: `## 1 Scope` → H2 ✓
+- Subsections: `### 1.1 Purpose` → H3 ✓  
+- Tables: `#### Table 1 - Methods` → H4 ✓
+- List continuations: `#### h) verifiability` → H4 ✓
+
+**Academic Papers:**
+- Sections: `## 2 Methodology` → H2 ✓
+- Subsections: `### 2.1 Data Collection` → H3 ✓
+- Figures: `#### Figure 1 - Overview` → H4 ✓
+- References: `#### [1] Author et al.` → H4 ✓
+
+**User Manuals:**
+- Chapters: `## Chapter 3: Configuration` → H2 ✓
+- Procedures: `### 3.1 Initial Setup` → H3 ✓  
+- Steps: `#### Step 1: Download` → H4 ✓
+- Screenshots: `#### Figure 3-1: Main Menu` → H4 ✓
+
+### Complete Phase 3 Workflow
+
+```bash
+# Phase 3a: Basic numbered section corrections
+python scripts/apply_substitutions.py document.md -s 's/^## ([0-9]+\\.[0-9]+\\.[0-9]+)/### \\1/g'
+python scripts/apply_substitutions.py document.md -s 's/^## ([0-9]+\\.[0-9]+) /### \\1 /g'
+
+# Phase 3b: Context-aware subordinate corrections  
+python scripts/apply_substitutions.py document.md -s 's/^## (Table [0-9A-Za-z\\. ]+.*)/#### \\1/g'
+python scripts/apply_substitutions.py document.md -s 's/^## (Figure [0-9A-Za-z\\. ]+.*)/#### \\1/g'  
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]+ [a-z]+ [A-Z0-9-]+.*)/#### \\1/g'
+python scripts/apply_substitutions.py document.md -s 's/^## ([a-z]\\) .*)/#### \\1/g'
+python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z]\\.[0-9]+.*)/### \\1/g'
+
+# Verification
+python scripts/extract_samples.py document.md
+```
+
+This two-phase approach ensures both structural consistency (3a) and contextual appropriateness (3b) while remaining generic and adaptable to any document type.
