@@ -40,24 +40,36 @@ The process involves...
    - Look for "REPEATED LINES" section (10+ occurrences = boilerplate)
    - Check samples for `<!-- image -->` patterns
    - Identify conversion artifacts (strange formatting)
+   - **IMPORTANT**: Note the exact repeated text patterns in YOUR document!
 
-2. **Test**: Apply patterns with `--dry-run`
+2. **Analyze**: Based on step 1 findings, create document-specific patterns
    ```bash
+   # Example: If you found "CONFIDENTIAL - Internal Use Only" 47x and "<!-- image -->" 23x
+   # Create patterns that match YOUR document's actual boilerplate:
+   python scripts/apply_substitutions.py document.md -s 's/^CONFIDENTIAL - Internal Use Only$//' --dry-run
+   ```
+   **Don't copy-paste generic examples - adapt to what you actually found!**
+
+3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+   ```bash
+   # These are EXAMPLES - adapt based on step 1 findings:
    python scripts/apply_substitutions.py document.md -s 's/<!-- image -->//g' --dry-run
    python scripts/apply_substitutions.py document.md -s 's/^CONFIDENTIAL.*$//' --dry-run
    ```
 
-3. **Apply**: Remove `--dry-run` flag
-   ```bash  
+4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
+   ```bash
+   # Use YOUR patterns from step 3, not these generic examples:
    python scripts/apply_substitutions.py document.md -s 's/<!-- image -->//g'
    python scripts/apply_substitutions.py document.md -s 's/^CONFIDENTIAL.*$//'
    ```
 
-4. **Verify**: Run `python scripts/extract_samples.py document.md`
+5. **Verify**: Run `python scripts/extract_samples.py document.md`
    - Confirm patterns disappeared from "REPEATED LINES" 
    - Check samples show clean content
+   - **Verify YOUR specific patterns worked correctly**
 
-5. **Iterate**: Repeat steps 1-4 until no more conversion artifacts or boilerplate found
+6. **Iterate**: Repeat steps 1-5 until no more conversion artifacts or boilerplate found
 
 ## Appendix
 

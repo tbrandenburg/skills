@@ -73,36 +73,52 @@ Review of documentation...
    - Look for ## Table, ## Figure patterns that interrupt flow
    - Find generic single words as headings: pattern `^## [A-Z][a-z]*[^:]{0,20}$`
    - Check for list items that became headings: ## Input, ## Output
+   - **IMPORTANT**: Note the actual patterns in YOUR document - don't assume standard formats!
 
-2. **Test**: Apply patterns with `--dry-run`
+2. **Analyze**: Based on step 1 findings, create document-specific patterns
    ```bash
-   python scripts/apply_substitutions.py document.md -s 's/^## (Table [0-9])/#### \1/' --dry-run  
-   python scripts/apply_substitutions.py document.md -s 's/^## (Figure [0-9])/#### \1/' --dry-run
+   # Example: If you found "Table A.1 (continued)", "Table 5-2", "Figure E.1"
+   # Create patterns that match YOUR document's actual format:
+   python scripts/apply_substitutions.py document.md -s 's/^## (Table [A-Z0-9.-]*.*)/#### \1/' --dry-run
+   ```
+   **Don't copy-paste generic examples - adapt to what you actually found!**
+3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+   ```bash
+   # These are EXAMPLES - adapt based on step 1 findings:
+   python scripts/apply_substitutions.py document.md -s 's/^## (Table [A-Z0-9.].*)/#### \1/' --dry-run  
+   python scripts/apply_substitutions.py document.md -s 's/^## (Figure [A-Z0-9.].*)/#### \1/' --dry-run
    python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]*[^:]{0,20})$/\*\*\1:\*\*/' --dry-run
    ```
 
-3. **Apply**: Remove `--dry-run` flag
+4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
    ```bash
-   python scripts/apply_substitutions.py document.md -s 's/^## (Table [0-9])/#### \1/'
-   python scripts/apply_substitutions.py document.md -s 's/^## (Figure [0-9])/#### \1/'  
+   # Use YOUR patterns from step 3, not these generic examples:
+   python scripts/apply_substitutions.py document.md -s 's/^## (Table [A-Z0-9.].*)/#### \1/'
+   python scripts/apply_substitutions.py document.md -s 's/^## (Figure [A-Z0-9.].*)/#### \1/'  
    python scripts/apply_substitutions.py document.md -s 's/^## ([A-Z][a-z]*[^:]{0,20})$/\*\*\1:\*\*/'
    ```
 
-4. **Verify**: Run `python scripts/extract_samples.py document.md`
+5. **Verify**: Run `python scripts/extract_samples.py document.md`
    - Confirm tables/figures now at #### level
    - Check generic single words converted to bold text
    - Ensure document hierarchy flows logically
+   - **Verify YOUR specific patterns worked correctly**
 
-5. **Iterate**: Repeat steps 1-4 for other patterns like ## Note, ## Example
+6. **Iterate**: Repeat steps 1-5 for other patterns you discovered (## Note, ## Example, etc.)
 
 ## Appendix
 
-**Standard patterns:**
-- Tables: `s/^## (Table [0-9])/#### \1/`
-- Figures: `s/^## (Figure [0-9])/#### \1/`  
-- Generic terms: `s/^## ([A-Z][a-z]*[^:]{0,20})$/\*\*\1:\*\*/'`
+**Pattern Templates (adapt to your document):**
+- Tables: `s/^## (Table [A-Z0-9.].*)/#### \1/` (matches "Table 5", "Table A.1 (continued)", "Table E.2 - Example")
+- Figures: `s/^## (Figure [A-Z0-9.].*)/#### \1/` (matches "Figure 6-1", "Figure A.1: Overview")
+- Generic terms: `s/^## ([A-Z][a-z]*[^:]{0,20})$/\*\*\1:\*\*/'` (single words like "Method", "Input")
 
-**Document-specific examples:**
-- ISO: `s/^## (NOTE [0-9])/#### \1/`, `s/^## (EXAMPLE [0-9])/#### \1/`
-- Technical: `s/^## (Input|Output|Result)$/\*\*\1:\*\*/'`
-- Lists: `s/^## ([a-z]\))/\*\*\1\*\*/'`
+⚠️ **CRITICAL**: These are TEMPLATES. Always analyze your document first (step 1) and modify patterns to match what you actually find!
+
+**Example adaptations (based on actual document analysis):**
+- ISO documents: `s/^## (NOTE [0-9]*.*)/#### \1/`, `s/^## (EXAMPLE [0-9]*.*)/#### \1/`
+- Technical manuals: `s/^## (Input|Output|Result)$/\*\*\1:\*\*/'`
+- Academic papers: `s/^## ([a-z]\))/\*\*\1\*\*/'`
+- Complex tables: `s/^## (Table [A-Z0-9.]*\s*\(continued\))/#### \1/` (for "(continued)" tables)
+
+**Remember**: Run `extract_samples.py` first, see what YOUR document actually contains, then build patterns that match!

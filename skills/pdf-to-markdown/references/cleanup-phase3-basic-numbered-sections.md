@@ -59,33 +59,47 @@ The ASIL determination process...
    - Look for lines starting with just numbers: "6 ASIL determination"
    - Find mixed patterns: some headings with #, some without
    - Check numbered subsections: "6.1", "6.2.1" patterns
+   - **IMPORTANT**: Note the exact numbering patterns in YOUR document!
 
-2. **Test**: Apply patterns with `--dry-run`
+2. **Analyze**: Based on step 1 findings, create document-specific patterns
    ```bash
+   # Example: If you found "6 ASIL determination" and "6.1 Overview"
+   # Create patterns that match YOUR document's actual numbering:
+   python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\s+[A-Z])/## \1/' --dry-run
+   ```
+   **Don't copy-paste generic examples - adapt to what you actually found!**
+
+3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+   ```bash
+   # These are EXAMPLES - adapt based on step 1 findings:
    python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\s)/## \1/' --dry-run
    python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\.[0-9]+\s)/### \1/' --dry-run
    ```
 
-3. **Apply**: Remove `--dry-run` flag
-   ```bash  
+4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
+   ```bash
+   # Use YOUR patterns from step 3, not these generic examples:
    python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\s)/## \1/'
    python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\.[0-9]+\s)/### \1/'
    ```
 
-4. **Verify**: Run `python scripts/extract_samples.py document.md`
+5. **Verify**: Run `python scripts/extract_samples.py document.md`
    - Confirm all numbered sections now have # markers
    - Check proper hierarchy: ## for main, ### for subsections
+   - **Verify YOUR specific patterns worked correctly**
 
-5. **Iterate**: Repeat steps 1-4 for deeper levels (6.1.1 → ####)
+6. **Iterate**: Repeat steps 1-5 for deeper levels (6.1.1 → ####)
 
 ## Appendix
 
-**Standard patterns:**
+**Pattern Templates (adapt to your document):**
 - Main sections: `s/^([0-9]+\s)/## \1/`
 - Subsections: `s/^([0-9]+\.[0-9]+\s)/### \1/`  
 - Sub-subsections: `s/^([0-9]+\.[0-9]+\.[0-9]+\s)/#### \1/`
 
-**Common variations:**
+**Example adaptations (based on actual document analysis):**
 - With dots: `s/^([0-9]+\.\s)/## \1/`
 - Appendices: `s/^(Annex [A-Z]\s)/## \1/`
 - Multiple spaces: `s/^([0-9]+)\s+/## \1 /`
+
+⚠️ **CRITICAL**: These are TEMPLATES. Always analyze your document first (step 1) and modify patterns to match what you actually find!

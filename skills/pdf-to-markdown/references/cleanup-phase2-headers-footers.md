@@ -41,22 +41,34 @@ This document describes...
    - Look for "REPEATED LINES" with page numbers, copyright, titles
    - Check samples for corporate footers at section ends
    - Identify document title repetition patterns
+   - **IMPORTANT**: Note the exact header/footer text patterns in YOUR document!
 
-2. **Test**: Apply patterns with `--dry-run`
+2. **Analyze**: Based on step 1 findings, create document-specific patterns
    ```bash
+   # Example: If you found "Page 15 of 200" and "© ISO 2018 - All rights reserved"
+   # Create patterns that match YOUR document's actual headers/footers:
+   python scripts/apply_substitutions.py document.md -s 's/^Page [0-9]+ of [0-9]+$//' --dry-run
+   ```
+   **Don't copy-paste generic examples - adapt to what you actually found!**
+
+3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+   ```bash
+   # These are EXAMPLES - adapt based on step 1 findings:
    python scripts/apply_substitutions.py document.md -s 's/^Page [0-9].*//' --dry-run
    python scripts/apply_substitutions.py document.md -s 's/^© .*$//' --dry-run
    ```
 
-3. **Apply**: Remove `--dry-run` flag
-   ```bash  
-   python scripts/apply_substitutions.py document.md -s 's/^Page [0-9].*//'
+4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
+   ```bash
+   # Use YOUR patterns from step 3, not these generic examples:
+   python scripts/apply_substitutions.py document.md -s 's/^Page [0-9].*//' 
    python scripts/apply_substitutions.py document.md -s 's/^© .*$//'
    ```
 
-4. **Verify**: Run `python scripts/extract_samples.py document.md`
+5. **Verify**: Run `python scripts/extract_samples.py document.md`
    - Confirm page numbers disappeared from samples
    - Check no copyright footers in sections
+   - **Verify YOUR specific patterns worked correctly**
 
 5. **Iterate**: Repeat steps 1-4 until all headers/footers removed
 

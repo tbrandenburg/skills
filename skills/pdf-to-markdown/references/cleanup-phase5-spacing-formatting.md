@@ -74,36 +74,50 @@ With proper spacing...
    - Look for multiple consecutive blank lines (3+ empty lines)
    - Check for headings without spaces after # markers
    - Find inconsistent bold/italic patterns
+   - **IMPORTANT**: Note the exact spacing/formatting issues in YOUR document!
 
-2. **Test**: Apply patterns with `--dry-run`
+2. **Analyze**: Based on step 1 findings, create document-specific patterns
    ```bash
+   # Example: If you found headings like "##6.1" and "###6.1.1"
+   # Create patterns that match YOUR document's actual spacing issues:
+   python scripts/apply_substitutions.py document.md -s 's/^##([0-9])/## \1/' --dry-run
+   ```
+   **Don't copy-paste generic examples - adapt to what you actually found!**
+
+3. **Test**: Apply YOUR document-specific patterns with `--dry-run`
+   ```bash
+   # These are EXAMPLES - adapt based on step 1 findings:
    python scripts/apply_substitutions.py document.md -s 's/\n\n\n+/\n\n/g' --dry-run
    python scripts/apply_substitutions.py document.md -s 's/^##([^ ])/## \1/' --dry-run
    python scripts/apply_substitutions.py document.md -s 's/^###([^ ])/### \1/' --dry-run
    ```
 
-3. **Apply**: Remove `--dry-run` flag
+4. **Apply**: Remove `--dry-run` flag (only if step 3 results look correct)
    ```bash
+   # Use YOUR patterns from step 3, not these generic examples:
    python scripts/apply_substitutions.py document.md -s 's/\n\n\n+/\n\n/g'
    python scripts/apply_substitutions.py document.md -s 's/^##([^ ])/## \1/'
    python scripts/apply_substitutions.py document.md -s 's/^###([^ ])/### \1/'
    ```
 
-4. **Verify**: Run `python scripts/extract_samples.py document.md`
+5. **Verify**: Run `python scripts/extract_samples.py document.md`
    - Confirm no excessive blank lines in samples
    - Check headings have proper spacing
    - Verify consistent formatting patterns
+   - **Verify YOUR specific patterns worked correctly**
 
-5. **Iterate**: Repeat steps 1-4 for edge cases like trailing spaces, mixed emphasis
+6. **Iterate**: Repeat steps 1-5 for edge cases like trailing spaces, mixed emphasis
 
 ## Appendix
 
-**Standard patterns:**
+**Pattern Templates (adapt to your document):**
 - Excessive blanks: `s/\n\n\n+/\n\n/g`
 - Heading spacing: `s/^##([^ ])/## \1/`, `s/^###([^ ])/### \1/`
 - Trailing spaces: `s/[ \t]+$//g`
 
-**Formatting consistency:**
+**Example adaptations (based on actual document analysis):**
 - Bold patterns: `s/\*([^*]+)\*/\*\*\1\*\*/g`
 - List spacing: `s/^([*-]) /\1 /` 
 - Code blocks: `s/^```([a-z]*)/```\1/`
+
+⚠️ **CRITICAL**: These are TEMPLATES. Always analyze your document first (step 1) and modify patterns to match what you actually find!
