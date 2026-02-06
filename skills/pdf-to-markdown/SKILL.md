@@ -7,10 +7,10 @@ description: Convert PDF documents to markdown format using docling, with flexib
 
 Convert PDF documents to markdown using docling with intelligent cleanup and splitting.
 
-## Complete Workflow
+## Mandatory Workflow
 
-Follow these steps **in order** and **thoroughly** for optimal results.
-Use your TODO tool for sticking to the plan.
+You **must follow** the steps below **in order**.
+Use your TODO tool to complete each step including it's sub-tasks thouroughly and consecutively before proceeding with the next step.
 
 ### Step 1: Environment Setup (One-time)
 ```bash

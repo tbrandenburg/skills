@@ -138,6 +138,9 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Dev data
+dev/*
+
 # Test data
 test*/
 
