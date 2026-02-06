@@ -31,7 +31,7 @@ python scripts/split_markdown.py document.md --heading-level 2 --dry-run   # Tes
 python scripts/split_markdown.py document.md --heading-level 2             # Apply
 ```
 
-## 4-Phase Cleanup Approach
+## 5-Phase Cleanup Approach
 
 **Work iteratively**: **dry-run → apply → verify** each phase:
 
@@ -41,11 +41,13 @@ python scripts/split_markdown.py document.md --heading-level 2             # App
 2. **Headers/Footers** → [cleanup-phase2-headers-footers.md](references/cleanup-phase2-headers-footers.md)  
    Remove page numbers, copyright footers, repeated organizational content
 
-3. **Heading Structure** → [cleanup-phase3-heading-structure.md](references/cleanup-phase3-heading-structure.md)  
-   - **3a**: Analyze numbering patterns and fix heading depths to match logical document hierarchy
-   - **3b**: Context-aware subordinate element corrections (tables, figures, list items)
+3. **Basic Numbered Sections** → [cleanup-phase3-basic-numbered-sections.md](references/cleanup-phase3-basic-numbered-sections.md)  
+   Analyze numbering patterns and fix heading depths to match logical document hierarchy
 
-4. **Spacing/Formatting** → [cleanup-phase4-spacing-formatting.md](references/cleanup-phase4-spacing-formatting.md)  
+4. **Context-Aware Subordinates** → [cleanup-phase4-context-aware-subordinates.md](references/cleanup-phase4-context-aware-subordinates.md)  
+   Fix subordinate element corrections (tables, figures, list items)
+
+5. **Spacing/Formatting** → [cleanup-phase5-spacing-formatting.md](references/cleanup-phase5-spacing-formatting.md)  
    Clean up excessive blank lines, list formatting, table issues
 
 ## Critical Principles
@@ -92,11 +94,11 @@ Applies sed-style regex substitutions with automatic backup.
 
 Example pattern suggestions (adapt to your document):
 
-**Phase 3a - Basic numbered sections:**
+**Phase 3 - Basic numbered sections:**
 - Fix heading depths: `-s 's/^## ([0-9]+\.[0-9]+\.[0-9]+)/### \1/g'`
 - Fix subsections: `-s 's/^## ([0-9]+\.[0-9]+) /### \1 /g'`
 
-**Phase 3b - Context-aware subordinates:**
+**Phase 4 - Context-aware subordinates:**
 - Tables: `-s 's/^## (Table [0-9A-Za-z\. ]+.*)/#### \1/g'`
 - Figures: `-s 's/^## (Figure [0-9A-Za-z\. ]+.*)/#### \1/g'`
 - Named elements: `-s 's/^## ([A-Z][a-z]+ [a-z]+ [A-Z0-9-]+.*)/#### \1/g'`
