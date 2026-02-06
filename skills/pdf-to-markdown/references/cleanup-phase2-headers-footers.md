@@ -37,13 +37,13 @@ This document describes...
 
 ## Workflow
 
-1. **Detect**: Run `python scripts/extract_samples.py document.md`
+1. **Analyze**: Run `python scripts/extract_samples.py document.md`
    - Look for "REPEATED LINES" with page numbers, copyright, titles
    - Check samples for corporate footers at section ends
    - Identify document title repetition patterns
    - **IMPORTANT**: Note the exact header/footer text patterns in YOUR document!
 
-2. **Analyze**: Based on step 1 findings, create document-specific patterns
+2. **Plan**: Based on step 1 findings, create document-specific patterns
    ```bash
    # Example: If you found "Page 15 of 200" and "© ISO 2018 - All rights reserved"
    # Create patterns that match YOUR document's actual headers/footers:

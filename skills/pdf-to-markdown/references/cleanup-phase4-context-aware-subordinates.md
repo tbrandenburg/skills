@@ -69,13 +69,13 @@ Review of documentation...
 
 ## Workflow
 
-1. **Detect**: Run `python scripts/extract_samples.py document.md`
+1. **Analyze**: Run `python scripts/extract_samples.py document.md`
    - Look for ## Table, ## Figure patterns that interrupt flow
    - Find generic single words as headings: pattern `^## [A-Z][a-z]*[^:]{0,20}$`
    - Check for list items that became headings: ## Input, ## Output
    - **IMPORTANT**: Note the actual patterns in YOUR document - don't assume standard formats!
 
-2. **Analyze**: Based on step 1 findings, create document-specific patterns
+2. **Plan**: Based on step 1 findings, create document-specific patterns
    ```bash
    # Example: If you found "Table A.1 (continued)", "Table 5-2", "Figure E.1"
    # Create patterns that match YOUR document's actual format:

@@ -36,13 +36,13 @@ The process involves...
 
 ## Workflow
 
-1. **Detect**: Run `python scripts/extract_samples.py document.md`
+1. **Analyze**: Run `python scripts/extract_samples.py document.md`
    - Look for "REPEATED LINES" section (10+ occurrences = boilerplate)
    - Check samples for `<!-- image -->` patterns
    - Identify conversion artifacts (strange formatting)
    - **IMPORTANT**: Note the exact repeated text patterns in YOUR document!
 
-2. **Analyze**: Based on step 1 findings, create document-specific patterns
+2. **Plan**: Based on step 1 findings, create document-specific patterns
    ```bash
    # Example: If you found "CONFIDENTIAL - Internal Use Only" 47x and "<!-- image -->" 23x
    # Create patterns that match YOUR document's actual boilerplate:

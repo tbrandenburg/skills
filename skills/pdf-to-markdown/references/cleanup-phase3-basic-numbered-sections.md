@@ -1,37 +1,47 @@
 # Phase 3: Basic Numbered Sections
 
 ## Goal
-Fix simple heading hierarchy issues where numbered sections appear as plain text instead of proper markdown headings. Convert "1. Introduction", "1.1 Overview" into ## 1. Introduction, ### 1.1 Overview.
+**SURGICALLY** fix heading hierarchy issues where numbered sections have incorrect markdown levels. This phase should ONLY modify headings that are actually broken - never apply blanket changes to all numbered headings.
 
-## Bad Examples
+## ⚠️ CRITICAL WARNING
+**DO NOT apply patterns blindly to all numbered headings!** Many documents already have correct hierarchy. Always analyze first to identify what's actually broken.
 
-**Numbered sections as plain text:**
+## Bad Examples (THESE need fixing)
+
+**Numbered sections as plain text (missing # markers):**
 ```markdown
 6 ASIL determination
 
 6.1 Overview of ASIL determination
 
 6.2 Determination of ASIL
-
-The ASIL determination process...
 ```
 
-**Mixed hierarchy problems:**
+**Mixed hierarchy problems (inconsistent # levels):**
 ```markdown
 ## 6 ASIL determination
-6.1 Overview of ASIL determination
+6.1 Overview of ASIL determination    ← Missing #
 ### 6.2 Determination of ASIL
 ```
 
-**Flattened hierarchy :**
+**Flattened hierarchy (wrong # levels):**
 ```markdown
 ## 6 ASIL determination
-## 6.1 Overview of ASIL determination
-## 6.1.1 Determination of ASIL
-## 6.1.2 Determination of ASIL
+## 6.1 Overview of ASIL determination    ← Should be ###
+## 6.1.1 Determination of ASIL          ← Should be ####
 ```
 
-## Good Examples
+## ✅ ALREADY CORRECT (DO NOT CHANGE)
+
+**Proper hierarchy (leave this alone!):**
+```markdown
+## 5. Process capability levels
+### 5.1. Process capability level 0
+### 5.2. Process capability level 1
+#### 5.2.1. PA 1.1 Process performance
+```
+
+## Good Examples (Target state)
 
 **Proper markdown heading hierarchy:**
 ```markdown
@@ -53,53 +63,142 @@ The ASIL determination process...
 #### 6.2.2 Step two
 ```
 
-## Workflow
+## Surgical Workflow
 
-1. **Detect**: Run `python scripts/extract_samples.py document.md`
-   - Look for lines starting with just numbers: "6 ASIL determination"
-   - Find mixed patterns: some headings with #, some without
-   - Check numbered subsections: "6.1", "6.2.1" patterns
-   - **IMPORTANT**: Note the exact numbering patterns in YOUR document!
+1. **Analyze**: Run `python scripts/extract_samples.py document.md`
+   - Examine HEADING PATTERNS section carefully
+   - Look for inconsistencies: `## 6.1` mixed with `### 6.2` 
+   - Identify plain text: lines like "6 Quality determination" (no # markers)
+   - Find flattened hierarchy: `## 6.1.1` when it should be `####`
+   - **CRITICAL**: Document what's BROKEN vs what's ALREADY CORRECT
 
-2. **Analyze**: Based on step 1 findings, create document-specific patterns
+2. **Plan**: Create specific detection patterns
    ```bash
-   # Example: If you found "6 ASIL determination" and "6.1 Overview"
-   # Create patterns that match YOUR document's actual numbering:
-   python scripts/apply_substitutions.py document.md -s 's/^([0-9]+\s+[A-Z])/## \1/' --dry-run
-   ```
-   **Don't copy-paste generic examples - adapt to what you actually found!**
-
-3. **Test**: Preview changes with native `sed` (no modification)
-   ```bash
-   # These are EXAMPLES - adapt based on step 1 findings:
-   sed 's/^([0-9]+\s)/## \1/' document.md | head -20        # Preview heading changes
-   sed 's/^([0-9]+\.[0-9]+\s)/### \1/' document.md | head -20  # Check subsections
+   # Find plain text numbered sections (missing # entirely)
+   grep "^[0-9]\+\.[0-9]\+ [A-Z]" document.md
+   
+   # Find potentially wrong hierarchy levels
+   grep "^## [0-9]\+\.[0-9]\+\.[0-9]\+" document.md   # 3-level at ## (should be ###/####)
+   grep "^### [0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+" document.md   # 4-level at ### (should be ####)
    ```
 
-4. **Apply**: Use `sed -i.backup` to apply changes (creates automatic backup)
+3. **SURGICAL PATTERNS**: Create TARGETED patterns for IDENTIFIED issues only
    ```bash
-   # Use YOUR patterns from step 3, not these generic examples:
-   sed -i.backup 's/^([0-9]+\s)/## \1/' document.md
-   sed -i.backup 's/^([0-9]+\.[0-9]+\s)/### \1/' document.md
+   # ONLY if step 2 found issues - adapt patterns to YOUR findings:
+   # Plain text → headings: 's/^([0-9]+\.[0-9]+ [A-Z])/### \1/'
+   # Wrong levels → correct levels: 's/^## ([0-9]+\.[0-9]+\.[0-9]+)/### \1/'
+   ```
+   **NEVER use blanket patterns like 's/^## ([0-9]+\.[0-9]+)/### \1/'** 
+
+4. **SURGICAL TEST**: Preview ONLY the changes needed
+   ```bash
+   # Test ONLY patterns for issues you identified in step 2:
+   sed 's/^([0-9]+\.[0-9]+ [A-Z])/### \1/' document.md | grep -E "^#{2,4} [0-9]" | head -20
    ```
 
-5. **Verify**: Run `python scripts/extract_samples.py document.md`
-   - Confirm all numbered sections now have # markers
-   - Check proper hierarchy: ## for main, ### for subsections
-   - **Verify YOUR specific patterns worked correctly**
+5. **APPLY SURGICALLY**: Fix ONLY identified issues
+   ```bash
+   # Apply ONLY patterns for confirmed issues:
+   sed -i.backup 's/^([0-9]+\.[0-9]+ [A-Z])/### \1/' document.md  # Example - adapt to YOUR needs
+   ```
 
-6. **Iterate**: Repeat steps 1-5 for deeper levels (6.1.1 → ####)
+6. **VERIFY SURGICALLY**: Check only affected sections
+   ```bash
+   # Check hierarchy around modified sections:
+   python scripts/extract_samples.py document.md | grep -A10 -B10 "HEADING PATTERNS"
+   ```
 
-## Appendix
+7. **ITERATE**: Apply additional surgical fixes if needed
 
-**Pattern Templates (adapt to your document):**
-- Main sections: `s/^([0-9]+\s)/## \1/`
-- Subsections: `s/^([0-9]+\.[0-9]+\s)/### \1/`  
-- Sub-subsections: `s/^([0-9]+\.[0-9]+\.[0-9]+\s)/#### \1/`
+## 🚨 PREVENTION RULES
 
-**Example adaptations (based on actual document analysis):**
-- With dots: `s/^([0-9]+\.\s)/## \1/`
-- Appendices: `s/^(Annex [A-Z]\s)/## \1/`
-- Multiple spaces: `s/^([0-9]+)\s+/## \1 /`
+### Rule 1: Document Analysis First
+**BEFORE any sed command**, understand your document's current state:
+- What's the existing hierarchy pattern?
+- Which sections are actually broken?
+- Which sections are already correct?
 
-⚠️ **CRITICAL**: These are TEMPLATES. Always analyze your document first (step 1) and modify patterns to match what you actually find!
+### Rule 2: Targeted Fixes Only
+**NEVER** apply these dangerous blanket patterns:
+- ❌ `s/^## \([0-9]\+\.[0-9]\+\)/### \1/` (changes ALL 2-level headings)
+- ❌ `s/^## \([0-9]\+\.[0-9]\+\.[0-9]\+\)/### \1/` (changes ALL 3-level headings)
+
+**INSTEAD** use targeted patterns based on analysis:
+- ✅ `s/^([0-9]+\.[0-9]+ [A-Z][^#])/### \1/` (only plain text sections)
+- ✅ `s/^## (4\.[0-9]+\.[0-9]+ )/### \1/` (only specific broken sections)
+
+### Rule 3: Test on Small Sections
+Before applying to entire document:
+```bash
+# Test pattern on specific line range first:
+sed -n '100,110p' document.md | sed 's/pattern/replacement/'
+```
+
+### Rule 4: Preserve Working Hierarchy
+If you see properly structured sections like:
+```markdown
+## 5. Main section
+### 5.1. Subsection
+#### 5.1.1. Sub-subsection
+```
+**DO NOT MODIFY THEM!**
+
+## Surgical Pattern Templates
+
+### Safe Detection Patterns
+```bash
+# Find sections missing # markers entirely (safe to fix):
+grep "^[0-9]\+\.[0-9]\+ [A-Z]" document.md
+
+# Find inconsistent hierarchy (needs analysis):
+grep -E "^#{2,4} [0-9]+\.[0-9]+(\.[0-9]+)*" document.md | sort | uniq -c
+```
+
+### Example Surgical Fixes (only after analysis!)
+```bash
+# ONLY if you found plain text sections:
+sed 's/^([0-9]+\.[0-9]+ [A-Z])/### \1/' document.md
+
+# ONLY if you found specific wrong levels:
+sed 's/^## (6\.[0-9]+\.[0-9]+)/### \1/' document.md  # Fix only chapter 6 3-level headings
+```
+
+### Recovery Commands
+```bash
+# If you broke hierarchy, restore from backup:
+cp document.md.backup document.md
+
+# Check what your pattern would change before applying:
+diff <(grep "^##" document.md) <(sed 's/pattern/replacement/' document.md | grep "^##")
+```
+
+## ❌ DANGEROUS Patterns (Never Use)
+
+These patterns caused the Automotive SPICE hierarchy issue:
+
+```bash
+# ❌ DANGEROUS - affects ALL 2-level headings (including correct ones):
+sed 's/^## \([0-9]\+\.[0-9]\+\)/### \1/'
+
+# ❌ DANGEROUS - affects ALL 3-level headings:
+sed 's/^## \([0-9]\+\.[0-9]\+\.[0-9]\+\)/### \1/'
+
+# ❌ DANGEROUS - blanket changes without analysis:
+sed 's/^## \([0-9]\+\.[0-9]\+\.\)/### \1/'
+```
+
+## ✅ SAFE Approach
+
+1. **First** - understand what's broken:
+   ```bash
+   # Analyze current structure
+   python scripts/extract_samples.py document.md | grep -A50 "HEADING PATTERNS"
+   ```
+
+2. **Then** - create targeted fixes:
+   ```bash
+   # Fix ONLY identified issues
+   sed 's/specific-broken-pattern/correct-pattern/' document.md
+   ```
+
+⚠️ **REMEMBER**: The Automotive SPICE document had CORRECT hierarchy that was broken by blanket patterns. Always preserve working structure!
