@@ -74,36 +74,40 @@ Review of documentation...
    - Check for list items that became headings: ## Input, ## Output
    - **CRITICAL**: Use BROADER detection to catch ALL non-numbered headings:
      ```bash
-     grep "^## [A-Za-z]" document.md | sort | uniq -c | sort -nr
+     # This is an example -> adapt it based on extracted samples!
+     grep "^##\s\+[A-Za-z]" document.md | sort | uniq -c | sort -nr
      ```
    - Look for systematic patterns even if infrequent: ## PA X.X, ## Rating method RX
    - **IMPORTANT**: Note the actual patterns in YOUR document - don't assume standard formats!
 
 2. **Plan**: Find ALL subordinate patterns (both frequent AND systematic)
    ```bash
+   # These are EXAMPLES - adapt based on step 1 findings!
    # BROADER approach - catch ALL letter-starting headings (including those with numbers):
    # Frequent subordinates (3+ occurrences)
-   FREQUENT=$(grep "^## [A-Za-z]" document.md | sort | uniq -c | awk '$1 >= 3 {print $2}' | cut -d' ' -f3- | paste -sd '|')
+   FREQUENT=$(grep "^##\s\+[A-Za-z]" document.md | sort | uniq -c | awk '$1 >= 3 {print $2}' | cut -d' ' -f3- | paste -sd '|')
    
    # Systematic subordinates (even if infrequent)
-   grep "^## \(Rating method\|PA [0-9]\|Process attribute\|Generic practice\)" document.md
+   grep "^##\s\+\(Rating method\|PA [0-9]\|Process attribute\|Generic practice\)" document.md
    echo "Found frequent: $FREQUENT"
    ```
 3. **Test**: Preview the subordinate conversion
    ```bash
    # These are EXAMPLES - adapt based on step 2 plan:
    # Test the pattern conversion (shows changes without modifying file)
-   sed "s/^##\s\+\($SUBORDINATES\)\$/### \1/g" document.md | grep -C2 "^### " | head -20
+   # 💡 DEPTH ADAPTATION: Use H4 (####) by default, H3 (###) if document has less nesting
+   sed "s/^##\s\+\($SUBORDINATES\)\$/#### \1/g" document.md | grep -C2 "^#### " | head -20
    ```
-4. **Apply**: Convert recurring subordinates to H3
+4. **Apply**: Convert recurring subordinates (default: H4, adapt based on document depth)
    ```bash
    # Use YOUR patterns from step 3, not these generic examples:
-   # Apply the conversion (creates backup automatically)
-   sed -i.backup "s/^##\s\+\($SUBORDINATES\)\$/### \1/g" document.md
+   # Default to H4 (####) - adapt to H3 (###) if document typically uses less nesting
+   # 💡 DEPTH HINT: Check existing subordinates in document - match their typical level
+   sed -i.backup "s/^##\s\+\($SUBORDINATES\)\$/#### \1/g" document.md
    echo "Converted to subordinates: $SUBORDINATES"
    ```
 5. **Verify**: Run `python scripts/extract_samples.py document.md`
-   - Confirm recurring headings now appear as ### instead of ##
+   - Confirm recurring headings now appear as #### (or ###) instead of ##
    - Check that numbered sections (## 4.1, ## 4.2) remain as H2  
    - Ensure document hierarchy flows logically
    - **Verify YOUR specific subordinates were converted correctly**
@@ -114,11 +118,12 @@ Review of documentation...
 
 ### ⚠️ **CRITICAL Generic Principles**
 1. **Always analyze first** - never assume document structure
-2. **Use BROAD detection** - `^## [A-Za-z]` not `^## [^0-9]` (misses "PA 4.2"!)
+2. **Use BROAD detection** - `^##\s\+[A-Za-z]` not `^##\s\+[^0-9]` (misses "PA 4.2"!)
 3. **Dual approach**: frequency analysis (3+) AND systematic patterns (1+)
 4. **Preserve main structure** - protect numbered sections, annexes
 5. **Validate changes** - test patterns before applying
 6. **Context matters** - same heading might be main vs subordinate depending on position
+7. **💡 ADAPT DEPTH** - Default H4 (####), use H3 (###) if document typically nests deeper
 
 ### Common Systematic Subordinate Patterns
 
