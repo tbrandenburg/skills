@@ -141,5 +141,8 @@ vite.config.ts.timestamp-*
 # Test data
 test*/
 
+# dot folders
+.*/
+
 # Python virtual environments in skill scripts
 skills/**/scripts/.venv/

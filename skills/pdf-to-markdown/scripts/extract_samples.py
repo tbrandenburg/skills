@@ -38,8 +38,28 @@ def extract_samples(markdown_content, lines_per_sample=50, min_repeats=3):
     
     samples['headings'] = headings[:50]  # First 50 headings
     
-    # Find repeated lines (potential noise)
-    line_counts = Counter(line.strip() for line in all_lines if line.strip())
+    # Find repeated lines (potential noise) - normalize Unicode variations
+    line_counts = Counter()
+    for line in all_lines:
+        if line.strip():
+            # Generic Unicode normalization for better pattern detection
+            normalized = line.strip()
+            
+            # Normalize whitespace characters
+            normalized = re.sub(r'[\u00A0\u2000-\u200B\u2028\u2029]', ' ', normalized)  # Various spaces to regular space
+            
+            # Normalize dash/hyphen variations
+            normalized = re.sub(r'[\u2010-\u2015\u2212]', '-', normalized)  # Various dashes to regular hyphen
+            
+            # Normalize quotation marks
+            normalized = re.sub(r'[\u2018\u2019]', "'", normalized)  # Smart single quotes to regular apostrophe  
+            normalized = re.sub(r'[\u201C\u201D]', '"', normalized)  # Smart double quotes to regular quotes
+            
+            # Normalize multiple spaces to single space
+            normalized = re.sub(r'\s+', ' ', normalized)
+            
+            line_counts[normalized] += 1
+    
     repeated = [(line, count) for line, count in line_counts.items() 
                 if count >= min_repeats and not heading_pattern.match(line)]
     repeated.sort(key=lambda x: x[1], reverse=True)
