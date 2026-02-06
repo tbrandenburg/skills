@@ -108,7 +108,7 @@ The ASIL determination process...
    python scripts/extract_samples.py document.md | grep -A10 -B10 "HEADING PATTERNS"
    ```
 
-7. **ITERATE**: Apply additional surgical fixes if needed
+7. **Iterate**: Repeat steps 1-6 until no more wrong heading hierarchies found
 
 ## 🚨 PREVENTION RULES
 

@@ -53,7 +53,7 @@ This document describes...
 
 3. **Test**: Preview changes with native `sed` (no modification)
    ```bash
-   # These are EXAMPLES - adapt based on step 1 findings:
+   # These are EXAMPLES - adapt based on step 2 plan:
    sed 's/^Page [0-9].*//' document.md | head -20  # Preview changes
    sed 's/^© .*$//' document.md | grep -C2 "©"     # Check copyright removal
    ```
@@ -70,7 +70,7 @@ This document describes...
    - Check no copyright footers in sections
    - **Verify YOUR specific patterns worked correctly**
 
-5. **Iterate**: Repeat steps 1-4 until all headers/footers removed
+6. **Iterate**: Repeat steps 1-4 until all headers/footers removed
 
 ## Appendix
 

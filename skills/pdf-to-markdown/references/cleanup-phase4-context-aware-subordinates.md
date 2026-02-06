@@ -71,99 +71,43 @@ Review of documentation...
 
 1. **Analyze**: Run `python scripts/extract_samples.py document.md`
    - Look for ## Table, ## Figure patterns that interrupt flow
-   - Find generic single words as headings: pattern `^## [A-Z][a-z]*[^:]{0,20}$`
    - Check for list items that became headings: ## Input, ## Output
+   - Use content-aware detection to find subordinate patterns
    - **IMPORTANT**: Note the actual patterns in YOUR document - don't assume standard formats!
 
-2. **Plan**: Use multiple detection strategies for comprehensive coverage
+2. **Plan**: Find recurring non-numbered H2 headings (likely subordinates)
    ```bash
-   # Strategy A: Single words (original pattern) - catches short subordinate terms
-   grep "^## [A-Z][a-z]*[^:]\{0,20\}$" document.md
-   
-   # Strategy B: Multi-word phrases - catches longer subordinate headings  
-   grep "^## [A-Z][a-z ]* [a-z]" document.md
-   
-   # Strategy C: Context-based - headings appearing after known structural elements
-   grep -A1 "^#### Process ID$\|^#### Process attribute ID$" document.md | grep "^##"
-   
-   # Strategy D: Length-based - very short headings are often subordinate
-   grep "^## [A-Z][A-Za-z ]\{1,40\}$" document.md
-   
-   # Strategy E: Pattern exclusion - everything except known good patterns
-   grep "^## [^0-9]" document.md | grep -v "^## [0-9]\+\.\|^## [A-Z][A-Z]\|^## Annex"
+   # These are EXAMPLES - adapt based on step 1 analysis:
+   # Find H2 headings that appear 3+ times (excluding numbered sections)
+   SUBORDINATES=$(grep "^##\s\+[^0-9]" document.md | sort | uniq -c | awk '$1 >= 3 {print $2}' | cut -d' ' -f2- | paste -sd '|')
+   echo "Found recurring subordinates: $SUBORDINATES"
    ```
-   **Use multiple strategies to ensure comprehensive detection!**
-3. **Test**: Preview changes with multiple strategies
+3. **Test**: Preview the subordinate conversion
    ```bash
-   # Test A: Single words  
-   sed 's/^## ([A-Z][a-z]*[^:]{0,20})$/#### \1/' document.md | grep -C2 "####"
-   
-   # Test B: Multi-word subordinates
-   sed 's/^## ([A-Z][a-z ]* [a-z][a-zA-Z ]*[a-z])$/#### \1/' document.md | grep -C2 "####"
-   
-   # Test C: Comprehensive subordinate pattern (broader catch)
-   sed 's/^## ([A-Z][A-Za-z ]{1,50}[^0-9:])$/#### \1/' document.md | grep -C2 "####" | head -20
-   
-   # Test D: Safe exclusion approach - convert everything except known good patterns
-   sed '/^## [0-9]\+\.\|^## [A-Z][A-Z]\|^## Annex/!s/^## ([^0-9].*)/#### \1/' document.md | head -30
+   # These are EXAMPLES - adapt based on step 2 plan:
+   # Test the pattern conversion (shows changes without modifying file)
+   sed "s/^##\s\+\($SUBORDINATES\)\$/### \1/g" document.md | grep -C2 "^### " | head -20
    ```
-   **Try multiple approaches - use the one that catches your specific subordinates best!**
-
-4. **Apply**: Use the most effective strategy from testing
+4. **Apply**: Convert recurring subordinates to H3
    ```bash
-   # Approach 1: Multi-strategy sequential application
-   sed -i.backup 's/^## ([A-Z][a-z]*[^:]{0,20})$/#### \1/' document.md          # Single words
-   sed -i.backup 's/^## ([A-Z][a-z ]* [a-z][a-zA-Z ]*[a-z])$/#### \1/' document.md # Multi-words
-   
-   # Approach 2: Comprehensive single pattern (recommended for most cases)
-   sed -i.backup 's/^## ([A-Z][A-Za-z ]{1,50}[^0-9:])$/#### \1/' document.md
-   
-   # Approach 3: Safe exclusion (most aggressive - use carefully)
-   sed -i.backup '/^## [0-9]\+\.\|^## [A-Z][A-Z]\|^## Annex/!s/^## ([^0-9].*)/#### \1/' document.md
+   # Use YOUR patterns from step 3, not these generic examples:
+   # Apply the conversion (creates backup automatically)
+   sed -i.backup "s/^##\s\+\($SUBORDINATES\)\$/### \1/g" document.md
+   echo "Converted to subordinates: $SUBORDINATES"
    ```
-   **Choose the approach that worked best in your testing phase!**
-
 5. **Verify**: Run `python scripts/extract_samples.py document.md`
-   - Confirm tables/figures now at #### level
-   - Check generic single words converted to bold text
+   - Confirm recurring headings now appear as ### instead of ##
+   - Check that numbered sections (## 4.1, ## 4.2) remain as H2  
    - Ensure document hierarchy flows logically
-   - **Verify YOUR specific patterns worked correctly**
+   - **Verify YOUR specific subordinates were converted correctly**
 
-6. **Iterate**: Repeat steps 1-5 for other patterns you discovered (## Note, ## Example, etc.)
+6. **Iterate**: Repeat steps 1-5 until no more wrong subordinates found
 
-## Appendix
+## ⚠️ **CRITICAL Generic Principles**
+1. **Always analyze first** - never assume document structure
+2. **Use frequency analysis** - subordinates repeat across documents  
+3. **Preserve main structure** - protect numbered sections, annexes
+4. **Validate changes** - test patterns before applying
+5. **Context matters** - same heading might be main vs subordinate depending on position
 
-**Pattern Templates (adapt to your document):**
-- Single words: `s/^## ([A-Z][a-z]*[^:]{0,20})$/#### \1/` 
-- Multi-word phrases: `s/^## ([A-Z][a-z ]* [a-z][a-zA-Z ]*[a-z])$/#### \1/`
-- Comprehensive: `s/^## ([A-Z][A-Za-z ]{1,50}[^0-9:])$/#### \1/` (catches both)
-- Safe exclusion: `/^## [0-9]\+\.\|^## [A-Z][A-Z]\|^## Annex/!s/^## ([^0-9].*)/#### \1/`
-- Tables: `s/^## (Table [A-Z0-9.].*)/#### \1/` 
-- Figures: `s/^## (Figure [A-Z0-9.].*)/#### \1/` 
-
-**New Generic Strategies:**
-- **Length-based**: `s/^## ([A-Z][A-Za-z ]{1,40}[a-z])$/#### \1/` (short headings likely subordinate)
-- **Context-aware**: Apply different patterns based on what precedes the heading
-- **Negative matching**: Fix everything except known good patterns
-
-⚠️ **CRITICAL**: These are TEMPLATES. Always analyze your document first (step 1) and modify patterns to match what you actually find!
-
-**Multi-word subordinate examples that the original pattern missed:**
-- "Process innovation process attribute" - needs multi-word pattern
-- "Configuration Management System" - needs phrase detection  
-- "Work product management process attribute" - needs longer phrase support
-- "Generic practices implementation" - needs context-aware detection
-
-**Recommended Generic Approach:**
-1. **Start conservative**: Use single-word pattern first 
-2. **Expand gradually**: Add multi-word pattern for remaining issues
-3. **Use exclusion lists**: Protect known good headings (numbered sections, annexes, etc.)
-4. **Manual verification**: Always check results - some headings may legitimately be main-level
-
-**Example adaptations (based on actual document analysis):**
-- ISO documents: `s/^## (NOTE [0-9]*.*)/#### \1/`, `s/^## (EXAMPLE [0-9]*.*)/#### \1/`
-- Technical manuals: `s/^## (Input|Output|Result)$/**\1:**/'`
-- Academic papers: `s/^## ([a-z]\))/\*\*\1\*\*/'`
-- Complex tables: `s/^## (Table [A-Z0-9.]*\s*\(continued\))/#### \1/` (for "(continued)" tables)
-
-**Remember**: Run `extract_samples.py` first, see what YOUR document actually contains, then build patterns that match!
+**Result**: The improved Phase 4 now automatically adapts to ANY document type by discovering its unique subordinate heading patterns, following AGENTS.md principles of being generic and content-aware rather than example-specific.
