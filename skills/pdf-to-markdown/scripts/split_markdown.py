@@ -22,6 +22,27 @@ def sanitize_filename(title, max_length=50):
     return title
 
 
+def filter_sections(sections, min_content_lines=3, merge_short=True):
+    """Filter out trivial sections and optionally merge short ones."""
+    filtered_sections = []
+    
+    for i, section in enumerate(sections):
+        content_lines = [line for line in section['content'].split('\n') if line.strip()]
+        
+        # Skip sections that are just headers with no content
+        if len(content_lines) < min_content_lines:
+            if merge_short and filtered_sections:
+                # Merge into previous section
+                filtered_sections[-1]['content'] += '\n\n' + section['content']
+                continue
+            # Skip trivial sections
+            continue
+            
+        filtered_sections.append(section)
+    
+    return filtered_sections
+
+
 def split_by_heading_level(markdown_content, level):
     """Split markdown by heading level."""
     lines = markdown_content.split('\n')
@@ -99,6 +120,8 @@ def main():
     parser.add_argument("markdown_file", help="Input markdown file")
     parser.add_argument("-o", "--output-dir", help="Output directory (default: <name>_split/)")
     parser.add_argument("--heading-level", type=int, help="Split on heading level (1-6)")
+    parser.add_argument("--min-content", type=int, default=3, help="Minimum content lines per section (default: 3)")
+    parser.add_argument("--no-merge", action="store_true", help="Don't merge short sections into previous ones")
     parser.add_argument("--pattern", help="Custom regex pattern for split points")
     parser.add_argument("--extract-title", help="Regex to extract title from delimiter line")
     parser.add_argument("--dry-run", action="store_true", help="Show split plan without creating files")
@@ -121,6 +144,10 @@ def main():
         sections = split_by_heading_level(content, args.heading_level)
     else:
         sections = split_by_pattern(content, args.pattern, args.extract_title)
+    
+    # Apply smart filtering
+    if args.heading_level:  # Only filter for heading-based splits
+        sections = filter_sections(sections, args.min_content, not args.no_merge)
     
     if not sections:
         print("No sections found")

@@ -128,8 +128,11 @@ Note: Automatic backup is created before any changes.
         content = apply_substitution(content, search, replace, flags, global_replace)
         after_lines = len(content.split('\n'))
         
-        # Count changes
-        changes = len(re.findall(search, original_content if i == 1 else content, flags=flags))
+        # Count actual replacements made
+        before_sub = content if i > 1 else original_content  # Content before this substitution
+        matches_before = len(re.findall(search, before_sub, flags=flags))
+        matches_after = len(re.findall(search, content, flags=flags))
+        changes = matches_before - matches_after  # Actual substitutions made
         
         print(f"{i}. {pattern}")
         print(f"   Matched: {changes} occurrence(s)")

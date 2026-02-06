@@ -10,12 +10,47 @@ from collections import Counter
 import re
 
 
+def detect_document_characteristics(markdown_content):
+    """Detect document structure characteristics for optimal processing."""
+    all_lines = markdown_content.split('\n')
+    
+    # Count heading levels
+    heading_levels = {'h2': 0, 'h3': 0, 'h4': 0}
+    for line in all_lines:
+        if line.startswith('## '):
+            heading_levels['h2'] += 1
+        elif line.startswith('### '):
+            heading_levels['h3'] += 1 
+        elif line.startswith('#### '):
+            heading_levels['h4'] += 1
+    
+    # Analyze document structure
+    total_headings = sum(heading_levels.values())
+    if total_headings == 0:
+        return 'SIMPLE', 2, 5
+    
+    # If many h3 headings, suggest h3 splitting with moderate threshold
+    if heading_levels['h3'] > heading_levels['h2'] * 0.5:
+        return 'HIERARCHICAL', 3, 4
+    
+    # If mostly h2 headings, suggest h2 splitting with higher threshold  
+    if heading_levels['h2'] > 20:
+        return 'STRUCTURED', 2, 6
+    
+    # Default balanced approach
+    return 'STANDARD', 2, 4
+
+
 def extract_samples(markdown_content, lines_per_sample=50, min_repeats=3):
     """Extract samples from different parts of the document."""
     all_lines = markdown_content.split('\n')
     total_lines = len(all_lines)
     
     samples = {}
+    
+    # Detect document characteristics
+    structure_type, suggested_level, suggested_min = detect_document_characteristics(markdown_content)
+    samples['structure'] = (structure_type, suggested_level, suggested_min)
     
     # Beginning sample
     samples['beginning'] = '\n'.join(all_lines[:lines_per_sample])
@@ -100,6 +135,8 @@ The agent should examine samples for:
     print("=" * 80)
     print(f"DOCUMENT SAMPLES: {md_path.name}")
     print(f"Total lines: {total_lines}")
+    structure_type, suggested_level, suggested_min = samples['structure']
+    print(f"Structure: {structure_type} (suggested: level {suggested_level}, min-content {suggested_min})")
     print("=" * 80)
     print()
     
@@ -136,17 +173,28 @@ The agent should examine samples for:
         print()
     
     print("=" * 80)
-    print("NEXT STEPS:")
+    print("RECOMMENDATIONS:")
     print("=" * 80)
+    structure_type, suggested_level, suggested_min = samples['structure']
+    
     print("1. Review samples above for issues:")
     print("   - Wrong heading depths based on numbering")
     print("   - Headers/footers (repeated lines)")
     print("   - Page numbers, copyright, boilerplate")
     print()
-    print("2. Create regexp substitutions for each issue:")
-    print("   Example: --substitute 's/^## (\\d+\\.\\d+\\.\\d+)/### \\1/'")
+    
+    print("2. Apply cleanup phases:")
+    print("   Phase 1: python scripts/apply_substitutions.py <file> --substitute 's/<!-- image -->//g'")
+    if samples['repeated']:
+        print("   Phase 2: Remove headers/footers (see repeated patterns above)")
+    print("   Phase 3: Fix heading depths:")
+    print("     --substitute 's/^## ([0-9]+\\.[0-9]+\\.[0-9]+)/### \\1/'")
+    print("     --substitute 's/^## ([0-9]+\\.[0-9]+) /### \\1 /'")
+    print("   Phase 4: Normalize spacing with 's/\\n\\n\\n+/\\n\\n/g'")
     print()
-    print("3. Apply with: python scripts/apply_substitutions.py")
+    
+    print("3. Optional document splitting:")
+    print(f"   Recommended: python scripts/split_markdown.py <file> --heading-level {suggested_level} --min-content {suggested_min}")
 
 
 if __name__ == "__main__":

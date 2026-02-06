@@ -5,16 +5,24 @@ This guide provides step-by-step implementation details for the PDF to markdown 
 ## Phase 1: Initial Conversion
 
 1. **Get PDF source**: File path or URL
-2. **Setup environment**: Run `setup_venv.sh` if docling not installed
+2. **Setup environment**: Run `setup_venv.sh` if docling not installed  
 3. **Convert to markdown**: Use `convert_full.py` with `--no-ocr` for best performance
 4. **Verify output**: Check that markdown file was created
 
-## Phase 2: Iterative Review and Cleanup
+## Phase 2: Document Analysis & Planning
+
+5. **Extract samples & analyze structure**: Run `extract_samples.py` to analyze document
+   - Auto-detects structure type: HIERARCHICAL, STRUCTURED, STANDARD, or SIMPLE
+   - Analyzes heading distribution and content density
+   - Provides tailored recommendations based on document characteristics
+   - Use output to plan cleanup phases
+
+## Phase 3: Iterative Review and Cleanup
 
 **Work in small, verifiable iterations:**
 
-5. **Extract samples**: Run `extract_samples.py` to see document structure
-6. **Review samples**: Agent examines samples for **ONE type of issue** at a time:
+6. **Follow recommended phases**: Use the specific recommendations from extract_samples.py
+7. **Review samples**: Agent examines samples for **ONE type of issue** at a time:
    - Start with most obvious/frequent issue (e.g., page footers appearing 100+ times)
    - Don't try to fix everything at once!
 
@@ -110,6 +118,35 @@ This guide provides step-by-step implementation details for the PDF to markdown 
 - **One issue at a time**: Fix page numbers, then headers, then headings - verify each
 - **Document-specific patterns**: Each PDF is different - create custom regexps for each
 - **Verify after each change**: Extract samples again to confirm success
+### Document Splitting (Optional)
+
+**Smart splitting based on document structure and content:**
+
+```bash
+# Use recommended parameters from extract_samples.py analysis
+python scripts/split_markdown.py document.md --heading-level <suggested> --min-content <suggested>
+
+# Common patterns:
+# Hierarchical documents: level 3, min-content 4
+# Structured documents: level 2, min-content 6  
+# Standard documents: level 2, min-content 4
+# Simple documents: level 2, min-content 5
+```
+
+**Splitting features:**
+- **Content filtering**: Sections with < min-content lines are merged into previous sections
+- **Smart merging**: Prevents trivial header-only files (like "## Part 6:")
+- **Adaptive strategy**: Different heading levels work better for different document types
+
+**When to split:**
+- Large documents (>1000 lines) benefit from organization
+- Multi-chapter/section documents work well split by major divisions
+- Skip splitting for small/simple documents
+
+## Quality Control
+
+### Review Split Results
+
 - **Restore on failure**: Use backup files to recover, don't continue with broken state
 - **Review split results**: Check filenames and content before accepting split
 - **Iterate until right**: If split doesn't meet criteria, delete and try different approach
