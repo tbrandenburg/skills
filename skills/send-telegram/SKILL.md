@@ -34,6 +34,8 @@ Required environment variables (must be set before using):
 - `TELEGRAM_BOT_TOKEN`: Your Telegram bot token from @BotFather
 - `TELEGRAM_CHAT_ID`: Target chat ID (user, group, or channel ID)
 
+> **⚠️ Security Note**: The script only checks if required environment variables are set but never reads or logs their values. Do not modify the script to output these sensitive tokens. Agents should never attempt to read or access these environment variable values.
+
 Optional environment variables:
 
 - `MAX_LEN`: Maximum message length per chunk (default: 3900)
