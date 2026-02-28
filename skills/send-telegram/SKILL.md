@@ -1,6 +1,6 @@
 ---
 name: send-telegram
-description: Send messages to Telegram chats via bot API with automatic message chunking for long content. Use when Claude needs to send notifications, alerts, logs, status updates, or any text content to Telegram. Handles message length limits automatically by splitting long messages into numbered chunks.
+description: Send messages to Telegram chats via bot API with automatic message chunking for long content. Use when agent needs to send notifications, alerts, logs, status updates, or any text content to Telegram. Handles message length limits automatically by splitting long messages into numbered chunks.
 ---
 
 # Send Telegram
