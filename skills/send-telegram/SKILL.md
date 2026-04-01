@@ -1,13 +1,13 @@
 ---
 name: send-telegram
-description: Send messages to Telegram chats via bot API with automatic message chunking for long content. Use when agent needs to send notifications, alerts, logs, status updates, or any text content to Telegram. Handles message length limits automatically by splitting long messages into numbered chunks.
+description: Send messages or media (images, audio, voice, video, animations, documents) to Telegram chats via bot API. Handles automatic message chunking for long text. Use when agent needs to send notifications, alerts, logs, status updates, text, or any media file to Telegram.
 ---
 
 # Send Telegram
 
 ## Overview
 
-Send text messages to Telegram chats using the Telegram Bot API. Automatically handles long messages by chunking them into multiple parts with pagination headers (1/3, 2/3, etc.).
+Send text messages or media files to Telegram chats using the Telegram Bot API. Automatically handles long messages by chunking them into multiple parts with pagination headers (1/3, 2/3, etc.).
 
 ## Agent Usage Notes
 
@@ -25,7 +25,7 @@ bash scripts/send_telegram.sh "Your message"
 
 ## Quick Start
 
-Use the `send_telegram.sh` script to send messages:
+Use the `send_telegram.sh` script to send messages or media:
 
 ```bash
 # Send a simple message
@@ -39,6 +39,21 @@ echo "Message content" | ./scripts/send_telegram.sh
 
 # Send file contents
 cat log.txt | ./scripts/send_telegram.sh
+
+# Send a local image
+./scripts/send_telegram.sh --photo /path/to/image.jpg
+
+# Send an image from a URL with caption
+./scripts/send_telegram.sh --photo https://example.com/image.png "My caption"
+
+# Send audio
+./scripts/send_telegram.sh --audio /path/to/track.mp3 "Track title"
+
+# Send video
+./scripts/send_telegram.sh --video /path/to/clip.mp4 "Caption"
+
+# Send any file as document
+./scripts/send_telegram.sh --document /path/to/report.pdf
 ```
 
 ## Environment Variables
@@ -74,10 +89,38 @@ Optional environment variables:
 ./scripts/send_telegram.sh "<b>Alert:</b> System status is <i>healthy</i>"
 ```
 
+## Sending Media
+
+All media flags accept a local file path or HTTP(S) URL as the first argument, followed by an optional caption (HTML supported, max 1024 chars). `DISABLE_NOTIFICATION` applies to all media types.
+
+| Flag | Short | Telegram method | Recommended formats | Max size |
+|---|---|---|---|---|
+| `--photo` | `-p` | `sendPhoto` | JPEG, PNG, WebP | 10 MB local / 5 MB URL |
+| `--audio` | `-a` | `sendAudio` | MP3, M4A, OGG | 50 MB local / 20 MB URL |
+| `--voice` | | `sendVoice` | OGG (OPUS) | 50 MB local / 20 MB URL |
+| `--video` | `-v` | `sendVideo` | MP4 (H.264+AAC) | 50 MB local / 20 MB URL |
+| `--animation` | `-g` | `sendAnimation` | GIF, MP4 | 50 MB local / 20 MB URL |
+| `--document` | `-d` | `sendDocument` | Any format | 50 MB local / 20 MB URL |
+
+```bash
+./scripts/send_telegram.sh --photo  screenshot.png "<b>Weekly report</b>"
+./scripts/send_telegram.sh --audio  /tmp/track.mp3 "Song title"
+./scripts/send_telegram.sh --voice  recording.ogg
+./scripts/send_telegram.sh --video  /tmp/clip.mp4  "Watch this"
+./scripts/send_telegram.sh --animation  fun.gif
+./scripts/send_telegram.sh --document  report.pdf   "Q1 report"
+
+# URL works for all types
+./scripts/send_telegram.sh -p https://example.com/banner.jpg "Caption"
+```
+
+> **Tip**: Use `--document` as a safe fallback for any format not natively supported by the other methods.
+
 ## Features
 
 - **Automatic chunking**: Long messages split into multiple parts with headers
-- **HTML support**: Use HTML tags for formatting (bold, italic, etc.)
+- **Media sending**: Photos, audio, voice, video, animations, and documents — local files or URLs
+- **HTML support**: Use HTML tags for formatting in messages and media captions
 - **Flexible input**: Accept message as arguments or from stdin
 - **Error handling**: Validates API responses and provides clear error messages
 - **Configurable**: Customize message length, notifications, and previews

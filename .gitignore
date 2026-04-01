@@ -142,7 +142,7 @@ vite.config.ts.timestamp-*
 dev/*
 
 # Test data
-test*/
+test_*/
 
 # dot folders
 .*/

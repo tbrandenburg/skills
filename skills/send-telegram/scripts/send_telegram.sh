@@ -4,7 +4,7 @@ set -euo pipefail
 : "${TELEGRAM_BOT_TOKEN:?Env var TELEGRAM_BOT_TOKEN is required}"
 : "${TELEGRAM_CHAT_ID:?Env var TELEGRAM_CHAT_ID is required}"
 
-API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage"
+BASE_API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
 
 # Telegram max is 4096; keep margin
 MAX_LEN="${MAX_LEN:-3900}"
@@ -31,8 +31,45 @@ send_chunk() {
       --data-urlencode "parse_mode=HTML" \
       --data-urlencode "disable_web_page_preview=${DISABLE_WEB_PAGE_PREVIEW}" \
       --data-urlencode "disable_notification=${DISABLE_NOTIFICATION}" \
-      "$API"
+      "${BASE_API}/sendMessage"
   )" || {
+    echo "ERROR: curl request failed" >&2
+    exit 2
+  }
+
+  if ! printf '%s' "$resp" | grep -q '"ok"[[:space:]]*:[[:space:]]*true'; then
+    echo "ERROR: Telegram API returned failure:" >&2
+    printf '%s\n' "$resp" >&2
+    exit 3
+  fi
+}
+
+# send_media <method> <field> <src> [caption]
+# method: sendPhoto | sendAudio | sendVoice | sendVideo | sendAnimation | sendDocument
+# field:  photo | audio | voice | video | animation | document
+send_media() {
+  local method="$1"
+  local field="$2"
+  local src="$3"
+  local caption="${4:-}"
+  local -a args=(-sS --fail)
+
+  args+=(-F "chat_id=${TELEGRAM_CHAT_ID}")
+  args+=(-F "disable_notification=${DISABLE_NOTIFICATION}")
+
+  if [[ "$src" =~ ^https?:// ]]; then
+    args+=(-F "${field}=${src}")
+  else
+    [[ -f "$src" ]] || { echo "ERROR: File not found: ${src}" >&2; exit 1; }
+    args+=(-F "${field}=@${src}")
+  fi
+
+  if [[ -n "$caption" ]]; then
+    args+=(-F "caption=${caption}" -F "parse_mode=HTML")
+  fi
+
+  local resp
+  resp="$(curl "${args[@]}" "${BASE_API}/${method}")" || {
     echo "ERROR: curl request failed" >&2
     exit 2
   }
@@ -108,6 +145,16 @@ send_with_headers() {
 }
 
 main() {
+  local flag="${1:-}"
+  case "$flag" in
+    --photo|-p)       shift; send_media sendPhoto     photo     "${1:?ERROR: $flag requires a file path or URL}" "${*:2}"; return ;;
+    --audio|-a)       shift; send_media sendAudio     audio     "${1:?ERROR: $flag requires a file path or URL}" "${*:2}"; return ;;
+    --voice)          shift; send_media sendVoice     voice     "${1:?ERROR: $flag requires a file path or URL}";           return ;;
+    --video|-v)       shift; send_media sendVideo     video     "${1:?ERROR: $flag requires a file path or URL}" "${*:2}"; return ;;
+    --animation|-g)   shift; send_media sendAnimation animation "${1:?ERROR: $flag requires a file path or URL}" "${*:2}"; return ;;
+    --document|-d)    shift; send_media sendDocument  document  "${1:?ERROR: $flag requires a file path or URL}" "${*:2}"; return ;;
+  esac
+
   local msg
   msg="$(read_input "$@")"
 
